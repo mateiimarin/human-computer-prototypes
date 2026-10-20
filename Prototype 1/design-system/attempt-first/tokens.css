@@ -1,0 +1,130 @@
+/* Attempt First v0.2 — canonical light-theme design values.
+   Full CSS colors: use var(--primary), never hsl(var(--primary)).
+   Domain components must use semantic tokens rather than raw values. */
+:root {
+  color-scheme: light;
+  --background: #faf8f3;
+  --foreground: #2f302c;
+  --card: #ffffff;
+  --card-foreground: var(--foreground);
+  --popover: #ffffff;
+  --popover-foreground: var(--foreground);
+  --primary: #f6c945;
+  --primary-foreground: var(--foreground);
+  --primary-hover: #e9b931;
+  --primary-active: #dcaa23;
+  --secondary: #f0ede6;
+  --secondary-foreground: var(--foreground);
+  --secondary-hover: #e8e3d9;
+  --muted: #f0ede6;
+  --muted-foreground: #68645d;
+  --accent: #e8e3d9;
+  --accent-foreground: var(--foreground);
+  --border: #dfdad0;
+  --input: #8d877a;
+  --ring: #655285;
+  --guidance: #f0ebf7;
+  --guidance-foreground: #655285;
+  --student: #eaf1eb;
+  --student-foreground: #325e4d;
+  --ai-prompted: var(--guidance);
+  --ai-prompted-foreground: var(--guidance-foreground);
+  --ai-supplied: var(--guidance);
+  --ai-supplied-foreground: var(--guidance-foreground);
+  --mixed: #f9edce;
+  --mixed-foreground: #795116;
+  --unclear: #eeece6;
+  --unclear-foreground: #5f5b55;
+  --warning: #fbf0d7;
+  --warning-foreground: #7a4b13;
+  --success: #eaf1eb;
+  --success-foreground: #325e4d;
+  --destructive: #a63d32;
+  --destructive-foreground: #ffffff;
+  --danger-surface: #fbece7;
+  --disabled: #e9e5dd;
+  --disabled-foreground: #68645d;
+  --selection: #fff2c6;
+  --apricot: #f5a66f;
+  --scrim: rgb(47 48 44 / 40%);
+  /* Compatibility values, not a recommendation to add charts or global nav. */
+  --chart-1: #325e4d;
+  --chart-2: #655285;
+  --chart-3: #795116;
+  --chart-4: #a63d32;
+  --chart-5: #5f5b55;
+  --sidebar: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  --font-body: "Inter", "Segoe UI", sans-serif;
+  --font-heading: var(--font-body);
+  --font-code: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --text-display: 2.5rem;
+  --leading-display: 3rem;
+  --text-page: 1.875rem;
+  --leading-page: 2.375rem;
+  --text-section: 1.375rem;
+  --leading-section: 1.875rem;
+  --text-title: 1.125rem;
+  --leading-title: 1.625rem;
+  --text-body: 1rem;
+  --leading-body: 1.625rem;
+  --text-label: .875rem;
+  --leading-label: 1.25rem;
+  --text-caption: .75rem;
+  --leading-caption: 1.125rem;
+
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --radius: .5rem;
+  --corner-compact: .25rem;
+  --corner-control: .375rem;
+  --corner-selection: .5rem;
+  --corner-card: .625rem;
+  --corner-major: .75rem;
+  --corner-pill: .25rem;
+  --shadow-small: 0 2px 4px rgb(47 48 44 / 4%);
+  --shadow-medium: 0 8px 24px rgb(47 48 44 / 9%);
+  --shadow-large: 0 20px 64px rgb(47 48 44 / 16%);
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --duration-enter: 240ms;
+  --duration-exit: 160ms;
+  --ease-enter: cubic-bezier(.2, .8, .2, 1);
+  --ease-exit: cubic-bezier(.4, 0, 1, 1);
+  --focus-width: 3px;
+  --focus-offset: 3px;
+  --target-min: 2.75rem;
+  --layout-max: 90rem;
+  --layout-reading: 72ch;
+  --layout-setup: 47.5rem;
+  --layout-help: 22rem;
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-floating: 40;
+  --z-backdrop: 50;
+  --z-modal: 60;
+  --z-status: 70;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-enter: 0ms;
+    --duration-exit: 0ms;
+  }
+}

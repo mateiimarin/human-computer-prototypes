@@ -1,0 +1,1059 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prove-it Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<link rel="stylesheet" href="tokens.css">
+<script>
+  /* Theme before paint: stored choice → system preference. */
+  (function () {
+    var pref = 'system';
+    try { pref = localStorage.getItem('proveit-theme') || 'system'; } catch (e) {}
+    var dark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.classList.toggle('dark', dark);
+    document.documentElement.dataset.themePref = pref;
+  })();
+</script>
+<style>
+/* ───────── Board base ───────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--background); color: var(--foreground);
+  font: var(--weight-regular) var(--text-body)/var(--leading-body) var(--font-body);
+  -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
+  transition: background-color var(--duration-normal) var(--ease-out), color var(--duration-normal) var(--ease-out);
+}
+::selection { background: var(--selection); }
+:focus-visible { outline: var(--focus-width) solid var(--ring); outline-offset: var(--focus-offset); }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; letter-spacing: var(--tracking-tight); }
+p { text-wrap: pretty; }
+a { color: var(--link); text-underline-offset: 2px; }
+button { font: inherit; color: inherit; }
+svg.i { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+svg.i.sm { width: 16px; height: 16px; }
+svg.i.xs { width: 14px; height: 14px; stroke-width: 2; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: 16px; top: -60px; z-index: 100; }
+.skip:focus { top: 12px; }
+
+.board-top {
+  position: sticky; top: 0; z-index: var(--z-sticky);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 10px 24px; background: color-mix(in srgb, var(--background) 88%, transparent);
+  backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: var(--weight-semibold); font-size: var(--text-label); }
+.mark { width: 28px; height: 28px; border-radius: 9px; background: var(--primary); color: var(--primary-foreground); display: grid; place-items: center; }
+.mark svg { width: 16px; height: 16px; stroke-width: 2.25; }
+.brand small { color: var(--muted-foreground); font-weight: var(--weight-regular); }
+.board-top .seg { overflow: visible; flex: none; }
+.board-nav { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+.board-nav a { color: var(--muted-foreground); text-decoration: none; font-size: var(--text-label); font-weight: var(--weight-medium); padding: 6px 12px; border-radius: var(--radius-pill); white-space: nowrap; }
+.board-nav a:hover { background: var(--accent); color: var(--foreground); }
+
+main.board { max-width: 72rem; margin: 0 auto; padding: 0 24px 96px; }
+.hero { padding: 72px 0 48px; max-width: 46rem; }
+.overline { font-size: var(--text-caption); line-height: var(--leading-caption); font-weight: var(--weight-medium); letter-spacing: .04em; text-transform: uppercase; color: var(--muted-foreground); }
+.hero h1 { font-size: 2.5rem; line-height: 3rem; font-weight: var(--weight-semibold); margin: 12px 0 16px; }
+.hero p { font-size: var(--text-body-lg); line-height: var(--leading-body-lg); color: var(--muted-foreground); }
+.hero-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+
+section.sec { padding: 56px 0 8px; border-top: 1px solid var(--border); scroll-margin-top: 64px; }
+.sec-head { display: grid; gap: 8px; margin-bottom: 32px; max-width: 44rem; }
+.sec-head h2 { font-size: var(--text-page); line-height: var(--leading-page); font-weight: var(--weight-semibold); }
+.sec-head p { color: var(--muted-foreground); }
+.sub { font-size: var(--text-section); line-height: var(--leading-section); font-weight: var(--weight-semibold); margin: 40px 0 16px; }
+.note { font-size: var(--text-label); line-height: var(--leading-label); color: var(--muted-foreground); }
+.grid { display: grid; gap: 16px; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+.g4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.stack { display: grid; gap: 12px; }
+.specimen { background: var(--surface-raised); border-radius: var(--radius-card); padding: 24px; min-width: 0; }
+.specimen > .overline { margin-bottom: 16px; }
+.specimen.plain { background: transparent; padding: 0; }
+
+/* Principles */
+.principles { counter-reset: p; display: grid; gap: 0; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+.principles li { list-style: none; padding: 20px 24px 20px 0; border-top: 1px solid var(--border); }
+.principles li::before { counter-increment: p; content: "0" counter(p); display: block; font: var(--weight-medium) var(--text-caption)/1 var(--font-code); color: var(--muted-foreground); margin-bottom: 10px; }
+.principles strong { display: block; font-weight: var(--weight-semibold); margin-bottom: 4px; }
+.principles span { color: var(--muted-foreground); font-size: var(--text-label); line-height: var(--leading-label); }
+ol.principles { padding: 0; margin: 0; }
+
+/* Swatches */
+.swatch { border-radius: var(--radius-field); overflow: hidden; background: var(--surface-raised); }
+.swatch .chip { height: 72px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-end; padding: 10px 12px; font-weight: var(--weight-medium); font-size: var(--text-label); }
+.swatch .meta { padding: 10px 12px; display: grid; gap: 2px; }
+.swatch .meta b { font-weight: var(--weight-medium); font-size: var(--text-label); }
+.swatch .meta code { font: var(--text-caption)/var(--leading-caption) var(--font-code); color: var(--muted-foreground); }
+.meaning { border-radius: var(--radius-card); padding: 16px; display: grid; gap: 10px; }
+.meaning .top { display: flex; align-items: center; gap: 8px; font-weight: var(--weight-semibold); }
+.meaning p { font-size: var(--text-label); line-height: var(--leading-label); }
+
+/* Type */
+.type-row { display: grid; grid-template-columns: 9rem 1fr; gap: 24px; align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.type-row .note { font-family: var(--font-code); font-size: var(--text-caption); }
+@media (max-width: 560px) { .type-row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* ───────── Components (these mirror the shadcn-vue variants in DESIGN_SYSTEM.md §8) ───────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: var(--target-min); padding: 0 18px; border-radius: var(--radius-pill);
+  border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+  font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-medium);
+  transition: background-color var(--duration-instant) var(--ease-out), border-color var(--duration-instant) var(--ease-out);
+}
+.btn-primary { background: var(--primary); color: var(--primary-foreground); }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-secondary { background: var(--secondary); color: var(--secondary-foreground); }
+.btn-secondary:hover { background: var(--accent); }
+.btn-outline { background: transparent; border-color: var(--input); }
+.btn-outline:hover { background: var(--accent); }
+.btn-ghost { background: transparent; }
+.btn-ghost:hover { background: var(--accent); }
+.btn-destructive { background: var(--destructive); color: var(--destructive-foreground); }
+.btn-sm { min-height: 32px; padding: 0 12px; font-size: var(--text-caption); }
+.btn-icon { width: 36px; min-height: 36px; padding: 0; background: transparent; }
+.btn-icon:hover { background: var(--accent); }
+.btn-send { width: 36px; min-height: 36px; padding: 0; background: var(--primary); color: var(--primary-foreground); }
+.btn[disabled], .btn[aria-disabled="true"] { background: var(--muted); color: var(--muted-foreground); border-color: transparent; cursor: not-allowed; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px 0 8px;
+  border-radius: var(--radius-pill); font-size: var(--text-caption); line-height: 1; font-weight: var(--weight-medium);
+  white-space: nowrap; border: 1px solid transparent;
+}
+.badge.demo { background: var(--evidence-demonstrated); color: var(--evidence-demonstrated-foreground); }
+.badge.part { background: var(--evidence-partial); color: var(--evidence-partial-foreground); }
+.badge.gap  { background: var(--evidence-gap); color: var(--evidence-gap-foreground); }
+.badge.unv  { background: transparent; color: var(--evidence-unverified-foreground); border: 1px dashed var(--evidence-unverified-dot); }
+.badge.assist { background: var(--assist); color: var(--assist-foreground); }
+.badge.check  { background: var(--check); color: var(--check-foreground); }
+.badge.neutral { background: var(--muted); color: var(--muted-foreground); }
+.badge.outline { background: transparent; border-color: var(--border); color: var(--muted-foreground); }
+
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.dot.demo { background: var(--evidence-demonstrated-dot); }
+.dot.part { background: var(--evidence-partial-dot); }
+.dot.gap  { background: var(--evidence-gap-dot); }
+.dot.unv  { border: 1.5px dashed var(--evidence-unverified-dot); }
+
+/* Segmented (Tabs / ToggleGroup) */
+.seg { display: inline-flex; padding: 4px; gap: 2px; background: var(--muted); border-radius: var(--radius-pill); max-width: 100%; overflow-x: auto; }
+.seg button {
+  display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; cursor: pointer;
+  min-height: 32px; padding: 0 14px; border-radius: var(--radius-pill); color: var(--muted-foreground);
+  font-size: var(--text-label); font-weight: var(--weight-medium); white-space: nowrap;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+.seg button:hover { color: var(--foreground); }
+.seg button[aria-pressed="true"], .seg button[aria-selected="true"] { background: var(--background); color: var(--foreground); box-shadow: 0 1px 2px rgb(0 0 0 / 8%); }
+.dark .seg button[aria-pressed="true"], .dark .seg button[aria-selected="true"] { background: var(--accent); box-shadow: none; }
+
+/* Signal icon for confidence (neutral, never traffic-light) */
+.sig { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.sig i { width: 3px; border-radius: 1px; background: currentColor; opacity: .3; }
+.sig i:nth-child(1) { height: 5px; } .sig i:nth-child(2) { height: 8px; } .sig i:nth-child(3) { height: 12px; }
+.sig[data-l="1"] i:nth-child(1), .sig[data-l="2"] i:nth-child(-n+2), .sig[data-l="3"] i { opacity: 1; }
+
+/* Fields */
+.field { display: grid; gap: 8px; }
+.label { font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-medium); }
+.help { font-size: var(--text-label); line-height: var(--leading-label); color: var(--muted-foreground); }
+.search { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; background: var(--composer); border-radius: var(--radius-pill); color: var(--muted-foreground); border: 1px solid transparent; }
+.search:focus-within { border-color: var(--input); }
+.search input { all: unset; flex: 1; min-width: 0; color: var(--foreground); font-size: var(--text-body); }
+.textarea {
+  width: 100%; min-height: 120px; resize: vertical; padding: 14px 16px; border-radius: var(--radius-field);
+  background: var(--composer); color: var(--foreground); border: 1px solid transparent;
+  font: var(--text-body-lg)/var(--leading-body-lg) var(--font-body);
+}
+.textarea:focus { outline: none; border-color: var(--input); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 30%, transparent); }
+.textarea::placeholder { color: var(--muted-foreground); }
+
+/* Quiz option row (RadioGroup) */
+.options { display: grid; gap: 8px; }
+.option {
+  display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 12px 16px; cursor: pointer;
+  border-radius: var(--radius-field); background: var(--composer); border: 1px solid transparent;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+.option:hover { background: var(--accent); }
+.option input { appearance: none; margin: 0; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--input); flex: none; display: grid; place-items: center; }
+.option input:checked { border-color: var(--foreground); }
+.option input:checked::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--foreground); }
+.option:has(input:checked) { background: var(--accent); border-color: var(--input); }
+.option:has(input:focus-visible) { outline: var(--focus-width) solid var(--ring); outline-offset: var(--focus-offset); }
+.option input:focus-visible { outline: none; }
+
+/* Switch */
+.switch { appearance: none; width: 36px; height: 22px; border-radius: 99px; background: var(--muted); border: 1.5px solid var(--input); position: relative; cursor: pointer; margin: 0; flex: none; transition: background-color var(--duration-fast) var(--ease-out); }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: var(--muted-foreground); transition: transform var(--duration-fast) var(--ease-out), background-color var(--duration-fast); }
+.switch:checked { background: var(--primary); border-color: var(--primary); }
+.switch:checked::after { transform: translateX(14px); background: var(--primary-foreground); }
+
+/* Card */
+.card { background: var(--surface-raised); border-radius: var(--radius-card); padding: 20px; min-width: 0; }
+.card-title { font-size: var(--text-section); line-height: var(--leading-section); font-weight: var(--weight-semibold); }
+
+/* Stage stepper */
+.stepper { display: inline-flex; align-items: center; gap: 2px; padding: 4px; background: var(--muted); border-radius: var(--radius-pill); }
+.step { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: var(--radius-pill); font-size: var(--text-caption); font-weight: var(--weight-medium); color: var(--muted-foreground); white-space: nowrap; }
+.step.done { color: var(--foreground); }
+.step.current { background: var(--primary); color: var(--primary-foreground); }
+.step.current.checkmode { background: var(--check-foreground); color: var(--background); }
+.step .dot.unv { width: 8px; height: 8px; }
+
+/* Composer */
+.composer { background: var(--composer); border-radius: var(--radius-composer); box-shadow: var(--shadow-composer); padding: 12px 12px 10px 20px; display: grid; gap: 8px; }
+.composer textarea { all: unset; display: block; width: 100%; min-height: 28px; font-size: var(--text-body-lg); line-height: var(--leading-body-lg); color: var(--foreground); white-space: pre-wrap; }
+.composer textarea::placeholder { color: var(--muted-foreground); }
+.composer .bar { display: flex; align-items: center; gap: 4px; margin-left: -10px; }
+.composer .bar .spacer { flex: 1; }
+.help-pick { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px 0 12px; border-radius: var(--radius-pill); border: 0; background: transparent; cursor: pointer; font-size: var(--text-label); font-weight: var(--weight-medium); color: var(--muted-foreground); }
+.help-pick:hover { background: var(--accent); color: var(--foreground); }
+.help-pick .lvl { color: var(--assist-foreground); }
+
+/* Companion thread */
+.msg-user { justify-self: end; max-width: 80%; background: var(--muted); padding: 10px 16px; border-radius: 20px; font-size: var(--text-body-lg); line-height: var(--leading-body-lg); }
+.msg-ai { font-size: var(--text-body-lg); line-height: var(--leading-body-lg); display: grid; gap: 12px; }
+.hint { border-left: 3px solid var(--assist-foreground); background: var(--assist); border-radius: 4px var(--radius-field) var(--radius-field) 4px; padding: 12px 16px; display: grid; gap: 6px; }
+.hint .badge { justify-self: start; background: transparent; padding: 0; height: auto; color: var(--assist-foreground); }
+
+/* Code */
+.code { background: var(--surface-raised); border-radius: var(--radius-card); overflow: hidden; border: 1px solid var(--border); }
+.code-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 6px 16px; font-size: var(--text-caption); color: var(--muted-foreground); font-weight: var(--weight-medium); }
+.code pre { margin: 0; padding: 4px 16px 16px; overflow-x: auto; font: var(--text-code)/var(--leading-code) var(--font-code); font-variant-ligatures: none; tab-size: 4; }
+.code pre:focus-visible { outline-offset: -2px; }
+.tk-k { color: #cf222e; } .tk-f { color: #8250df; } .tk-n { color: #0550ae; } .tk-c { color: #6e7781; } .tk-t { color: #953800; }
+.dark .tk-k { color: #ff7b72; } .dark .tk-f { color: #d2a8ff; } .dark .tk-n { color: #79c0ff; } .dark .tk-c { color: #8b949e; } .dark .tk-t { color: #ffa657; }
+code.inline { font: .875em var(--font-code); background: var(--muted); border-radius: var(--radius-tag); padding: 1px 6px; }
+.katex { font-size: 1.06em; }
+.katex-display { margin: .5em 0; text-align: left; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+.katex-display > .katex { text-align: left; }
+
+/* Check banner */
+.checkbar { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px; border-radius: var(--radius-field); background: var(--check); color: var(--check-foreground); font-size: var(--text-label); line-height: var(--leading-label); }
+.checkbar .msg { flex: 1; min-width: 0; }
+.checkbar b { font-weight: var(--weight-semibold); }
+.checkbar .btn { color: var(--check-foreground); }
+.checkbar .btn:hover { background: color-mix(in srgb, var(--check-foreground) 12%, transparent); }
+.checkbar.assisted { background: var(--assist); color: var(--assist-foreground); }
+.checkbar.assisted .btn { color: var(--assist-foreground); }
+
+/* Feedback card */
+.feedback { background: var(--surface-raised); border-radius: var(--radius-card); padding: 20px; display: grid; gap: 16px; }
+.feedback .fb-sec { display: grid; gap: 6px; }
+.feedback .fb-sec h4 { font-size: var(--text-caption); font-weight: var(--weight-medium); text-transform: uppercase; letter-spacing: .04em; color: var(--muted-foreground); }
+.feedback ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.feedback li { display: flex; gap: 10px; align-items: flex-start; }
+.feedback li svg { margin-top: 2px; }
+.feedback .ok svg { color: var(--evidence-demonstrated-foreground); }
+.feedback .gapline { background: var(--evidence-gap); color: var(--evidence-gap-foreground); padding: 10px 12px; border-radius: var(--radius-row); }
+.samplelabel { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-caption); color: var(--muted-foreground); font-weight: var(--weight-medium); }
+
+/* Concept rows */
+.concepts { display: grid; }
+.crow { display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; align-items: center; padding: 14px 4px; border-bottom: 1px solid var(--border); }
+.crow:first-child { border-top: 1px solid var(--border); }
+.crow .name { font-weight: var(--weight-medium); }
+.crow .meta { color: var(--muted-foreground); font-size: var(--text-label); }
+.minibar { display: flex; gap: 3px; }
+.minibar span { width: 18px; height: 6px; border-radius: 3px; }
+.minibar .demo { background: var(--evidence-demonstrated-dot); }
+.minibar .part { background: var(--evidence-partial-dot); }
+.minibar .gap { background: var(--evidence-gap-dot); }
+.minibar .unv { border: 1.5px dashed var(--evidence-unverified-dot); }
+.subrows { display: grid; gap: 0; padding: 4px 0 8px; grid-column: 1 / -1; }
+.subrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border-radius: var(--radius-row); }
+.subrow:hover { background: var(--accent); }
+.subrow .nm { flex: 1 1 14rem; min-width: 0; }
+
+/* Table */
+table.prepost { width: 100%; border-collapse: collapse; font-size: var(--text-body); }
+.prepost th { text-align: left; font-size: var(--text-caption); font-weight: var(--weight-medium); color: var(--muted-foreground); text-transform: uppercase; letter-spacing: .04em; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.prepost td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.prepost .res { display: inline-flex; align-items: center; gap: 6px; }
+.res.r-ok { color: var(--evidence-demonstrated-foreground); }
+.res.r-no { color: var(--evidence-gap-foreground); }
+.res.r-skip { color: var(--muted-foreground); }
+.table-wrap { overflow-x: auto; }
+
+/* Empty state */
+.empty { display: grid; justify-items: center; text-align: center; gap: 12px; padding: 40px 24px; border-radius: var(--radius-card); background: var(--surface-raised); }
+.empty svg { width: 40px; height: 40px; color: var(--muted-foreground); stroke-width: 1.5; }
+
+/* Dialog */
+dialog.dlg { border: 0; padding: 24px; border-radius: var(--radius-card); background: var(--popover); color: var(--popover-foreground); box-shadow: var(--shadow-dialog); width: min(440px, calc(100vw - 32px)); }
+dialog.dlg::backdrop { background: var(--scrim); }
+dialog.dlg[open] { animation: dlg-in var(--duration-normal) var(--ease-out); }
+@keyframes dlg-in { from { opacity: 0; transform: translateY(8px) scale(.98); } }
+.dlg h3 { font-size: var(--text-section); line-height: var(--leading-section); font-weight: var(--weight-semibold); margin-bottom: 8px; }
+.dlg p { color: var(--muted-foreground); }
+.dlg .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 24px; }
+.dlg-static { position: static; display: block; box-shadow: var(--shadow-dialog); border-radius: var(--radius-card); background: var(--popover); padding: 24px; }
+
+.toast { display: inline-flex; align-items: center; gap: 10px; background: var(--primary); color: var(--primary-foreground); border-radius: var(--radius-pill); padding: 10px 18px; font-size: var(--text-label); font-weight: var(--weight-medium); }
+
+/* ───────── App frames (screen compositions) ───────── */
+.frame { container-type: inline-size; border-radius: var(--radius-panel); border: 1px solid var(--border); background: var(--background); overflow: hidden; margin-top: 16px; }
+.frame-label { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 48px; }
+.frame-label h3 { font-size: var(--text-section); font-weight: var(--weight-semibold); }
+.app { display: grid; grid-template-columns: var(--rail-collapsed) 1fr; min-height: 640px; }
+.rail { background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 0; }
+.rail .btn-icon { color: var(--muted-foreground); border-radius: var(--radius-row); }
+.rail .btn-icon[aria-current="page"] { background: var(--accent); color: var(--foreground); }
+.rail .spacer { flex: 1; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--assist); color: var(--assist-foreground); display: grid; place-items: center; font-size: 11px; font-weight: var(--weight-semibold); }
+.app-main { display: grid; grid-template-rows: auto 1fr; min-width: 0; }
+.topbar { height: var(--topbar-height); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 12px 0 20px; min-width: 0; }
+.crumb { display: flex; align-items: center; gap: 6px; font-size: var(--text-label); color: var(--muted-foreground); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crumb b { color: var(--foreground); font-weight: var(--weight-medium); overflow: hidden; text-overflow: ellipsis; }
+.top-actions { display: flex; gap: 4px; align-items: center; }
+.canvas { display: grid; grid-template-columns: 1fr; min-width: 0; position: relative; }
+.col { width: 100%; max-width: var(--layout-thread); margin: 0 auto; padding: 16px 24px 24px; display: grid; gap: 20px; align-content: start; min-width: 0; }
+.col.wide { max-width: var(--layout-page); }
+.with-panel { grid-template-columns: 1fr var(--layout-panel); }
+.panel { margin: 8px 12px 12px 0; align-self: start; background: var(--surface-raised); border-radius: var(--radius-panel); padding: 8px; display: grid; }
+.panel .p-sec { padding: 12px; display: grid; gap: 6px; }
+.panel .p-sec + .p-sec { border-top: 1px solid var(--border); }
+.panel .p-title { font-size: var(--text-label); font-weight: var(--weight-medium); }
+.panel .p-line { display: flex; align-items: center; gap: 8px; font-size: var(--text-label); color: var(--muted-foreground); }
+.panel .p-line.ok { color: var(--foreground); }
+.problem { background: var(--surface-raised); border-radius: var(--radius-card); padding: 16px 20px; display: grid; gap: 8px; }
+.problem .ph { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.problem p { font-size: var(--text-body); }
+.thread { display: grid; gap: 20px; }
+.thread-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.mid-stage { display: none; }
+@container (min-width: 760px) { .mid-stage { display: inline-flex; } .stage-compact { display: none; } }
+@container (max-width: 1099px) { .with-panel { grid-template-columns: 1fr; } .panel { display: none; } }
+@container (max-width: 640px) {
+  .app { grid-template-columns: 1fr; } .rail { display: none; }
+  .col { padding: 12px 16px 20px; }
+  .topbar { padding: 0 8px 0 16px; }
+}
+.stage-compact { font-size: var(--text-caption); font-weight: var(--weight-medium); color: var(--muted-foreground); white-space: nowrap; }
+
+/* Verify crossfade demo */
+.swap { transition: opacity var(--duration-stage) var(--ease-out); }
+
+/* Overview */
+.greet { font-size: var(--text-display); line-height: var(--leading-display); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-tight); }
+.next { background: var(--surface-raised); border-radius: var(--radius-card); padding: 24px; display: grid; gap: 14px; }
+.next .why { color: var(--muted-foreground); }
+.statgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: 12px; }
+.stat { background: var(--surface-raised); border-radius: var(--radius-card); padding: 16px 20px; display: grid; gap: 4px; }
+.stat .num { font-size: var(--text-page); line-height: var(--leading-page); font-weight: var(--weight-semibold); }
+.stat .note { display: flex; align-items: center; gap: 6px; }
+
+/* Summary */
+.sum-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.sum-block { background: var(--surface-raised); border-radius: var(--radius-card); padding: 16px 20px; display: grid; gap: 8px; align-content: start; }
+.sum-block h4 { display: flex; align-items: center; gap: 8px; font-size: var(--text-label); font-weight: var(--weight-semibold); }
+.sum-block p, .sum-block li { font-size: var(--text-label); line-height: var(--leading-label); color: var(--muted-foreground); }
+.sum-block ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.big { font-size: var(--text-page); line-height: var(--leading-page); font-weight: var(--weight-semibold); }
+
+.dont { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+.do-card { border-radius: var(--radius-card); padding: 16px 20px; background: var(--surface-raised); display: grid; gap: 10px; }
+.do-card .tag { font-size: var(--text-caption); font-weight: var(--weight-semibold); display: inline-flex; align-items: center; gap: 6px; }
+.do-card.y .tag { color: var(--evidence-demonstrated-foreground); }
+.do-card.n .tag { color: var(--evidence-gap-foreground); }
+
+footer.board-foot { margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: var(--text-label); }
+
+@media (max-width: 640px) {
+  .board-top { padding: 8px 16px; }
+  .board-nav { display: none; }
+  .brand small { display: none; }
+  main.board { padding: 0 16px 64px; }
+  .hero { padding: 40px 0 32px; }
+  .hero h1 { font-size: 2rem; line-height: 2.5rem; }
+  .specimen { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { dialog.dlg[open] { animation: none; } }
+</style>
+</head>
+<body>
+<a class="btn btn-primary skip" href="#content">Skip to content</a>
+
+<!-- Lucide icon sprite (ISC licence). Decorative uses are aria-hidden. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 18a6 6 0 0 0 0-12v12z" fill="currentColor"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></symbol>
+    <symbol id="i-dashed" viewBox="0 0 24 24"><path d="M10.1 2.182a10 10 0 0 1 3.8 0"/><path d="M13.9 21.818a10 10 0 0 1-3.8 0"/><path d="M17.609 3.721a10 10 0 0 1 2.69 2.7"/><path d="M2.182 13.9a10 10 0 0 1 0-3.8"/><path d="M20.279 17.609a10 10 0 0 1-2.7 2.69"/><path d="M21.818 10.1a10 10 0 0 1 0 3.8"/><path d="M3.721 6.391a10 10 0 0 1 2.7-2.69"/><path d="M6.391 20.279a10 10 0 0 1-2.69-2.7"/></symbol>
+    <symbol id="i-buoy" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-skip" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
+    <symbol id="i-network" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+    <symbol id="i-library" viewBox="0 0 24 24"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></symbol>
+    <symbol id="i-panel" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+    <symbol id="i-type" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></symbol>
+    <symbol id="i-retry" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></symbol>
+  </defs>
+</svg>
+
+<header class="board-top">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span>
+    <span>Prove-it <small>Design system 0.1</small></span>
+  </div>
+  <nav class="board-nav" aria-label="Board sections">
+    <a href="#principles">Principles</a><a href="#color">Colour</a><a href="#type">Type</a>
+    <a href="#components">Components</a><a href="#states">Evidence</a><a href="#screens">Screens</a><a href="#voice">Voice</a>
+  </nav>
+  <div class="seg" role="group" aria-label="Theme">
+    <button type="button" data-theme="light" aria-pressed="false"><svg class="i sm" aria-hidden="true"><use href="#i-sun"/></svg><span class="sr-only">Light</span></button>
+    <button type="button" data-theme="dark" aria-pressed="false"><svg class="i sm" aria-hidden="true"><use href="#i-moon"/></svg><span class="sr-only">Dark</span></button>
+    <button type="button" data-theme="system" aria-pressed="false"><svg class="i sm" aria-hidden="true"><use href="#i-monitor"/></svg><span class="sr-only">System</span></button>
+  </div>
+</header>
+
+<main class="board" id="content">
+  <div class="hero">
+    <p class="overline">HCI · Milestone 2 · Prototype 2</p>
+    <h1>A quiet workspace for proving what you know.</h1>
+    <p>Work feels like the chat tools students already use. Checking feels different — focused, references hidden, honest about what was shown. Colour is reserved for evidence.</p>
+    <div class="hero-tags">
+      <span class="badge neutral">Nuxt + shadcn/vue</span>
+      <span class="badge neutral">Light &amp; dark</span>
+      <span class="badge neutral">Geist · KaTeX · Lucide</span>
+      <span class="badge neutral">WCAG 2.2 AA pairs</span>
+    </div>
+  </div>
+
+  <!-- ───────── Principles ───────── -->
+  <section class="sec" id="principles" aria-labelledby="h-principles">
+    <div class="sec-head"><p class="overline">01</p><h2 id="h-principles">Principles</h2></div>
+    <ol class="principles">
+      <li><strong>Colour means evidence.</strong><span>The UI is grey. If something is coloured, it says something about understanding, help, or check mode.</span></li>
+      <li><strong>Two modes, one look.</strong><span>Work and Verify share components; Verify removes the companion and adds a persistent "references hidden" signal.</span></li>
+      <li><strong>Never colour alone.</strong><span>Icon + text + colour for every state. Unverified is dashed so it survives greyscale.</span></li>
+      <li><strong>Confidence is not evidence.</strong><span>Self-ratings are neutral signal bars — never traffic-light hues.</span></li>
+      <li><strong>One next move.</strong><span>One filled pill per region. Everything else is tonal or ghost.</span></li>
+      <li><strong>Say less.</strong><span>No praise, no exclamation marks. Name the point and the next action.</span></li>
+      <li><strong>Optional looks optional.</strong><span>Deeper checks, twins and exports are tonal choices — never urgent, never primary.</span></li>
+    </ol>
+  </section>
+
+  <!-- ───────── Colour ───────── -->
+  <section class="sec" id="color" aria-labelledby="h-color">
+    <div class="sec-head"><p class="overline">02</p><h2 id="h-color">Colour</h2><p>Neutrals cover ~95 % of every screen. Toggle the theme at the top right — every value below is a live token.</p></div>
+    <h3 class="sub">Foundation</h3>
+    <div class="grid g4">
+      <div class="swatch"><div class="chip" style="background:var(--background)">Aa</div><div class="meta"><b>Canvas</b><code>--background</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--surface-raised)">Aa</div><div class="meta"><b>Raised</b><code>--surface-raised</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--composer)">Aa</div><div class="meta"><b>Composer · muted</b><code>--composer</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--accent)">Aa</div><div class="meta"><b>Hover · selected</b><code>--accent</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--primary);color:var(--primary-foreground)">Aa</div><div class="meta"><b>Primary (inverts)</b><code>--primary</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--background);color:var(--muted-foreground)">Aa</div><div class="meta"><b>Secondary ink</b><code>--muted-foreground</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--background);box-shadow:inset 0 0 0 2px var(--input)">&nbsp;</div><div class="meta"><b>Control edge · 3:1</b><code>--input</code></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--background);color:var(--link);box-shadow:inset 0 0 0 2px var(--ring)">Link</div><div class="meta"><b>Focus · link</b><code>--ring / --link</code></div></div>
+    </div>
+
+    <h3 class="sub">Meaning</h3>
+    <div class="grid g3">
+      <div class="meaning" style="background:var(--evidence-demonstrated);color:var(--evidence-demonstrated-foreground)"><div class="top"><svg class="i" aria-hidden="true"><use href="#i-check-circle"/></svg>Demonstrated</div><p>Independent evidence supports the tested point.</p></div>
+      <div class="meaning" style="background:var(--evidence-partial);color:var(--evidence-partial-foreground)"><div class="top"><svg class="i" aria-hidden="true"><use href="#i-contrast"/></svg>Partial</div><p>Partly right, missing reasoning, or mixed outcomes.</p></div>
+      <div class="meaning" style="background:var(--evidence-gap);color:var(--evidence-gap-foreground)"><div class="top"><svg class="i" aria-hidden="true"><use href="#i-alert"/></svg>Gap observed</div><p>A submitted attempt showed a specific misconception.</p></div>
+      <div class="meaning" style="border:1.5px dashed var(--evidence-unverified-dot);color:var(--evidence-unverified-foreground)"><div class="top"><svg class="i" aria-hidden="true"><use href="#i-dashed"/></svg>Unverified</div><p>No independent evidence yet — skipped, deferred, or only assisted.</p></div>
+      <div class="meaning" style="background:var(--assist);color:var(--assist-foreground)"><div class="top"><svg class="i" aria-hidden="true"><use href="#i-buoy"/></svg>Assistance</div><p>Anything the companion supplied: hints, solutions, assisted attempts.</p></div>
+      <div class="meaning" style="background:var(--check);color:var(--check-foreground)"><div class="top"><svg class="i" aria-hidden="true"><use href="#i-eye-off"/></svg>Check mode</div><p>Only while an independent check runs. Never on Work screens.</p></div>
+    </div>
+    <p class="note" style="margin-top:16px">Wrong answers use <b>Gap</b>, never destructive red. Destructive (<span style="color:var(--destructive)">this colour</span>) is only for discarding student input.</p>
+  </section>
+
+  <!-- ───────── Type ───────── -->
+  <section class="sec" id="type" aria-labelledby="h-type">
+    <div class="sec-head"><p class="overline">03</p><h2 id="h-type">Typography</h2><p>Geist for the interface, Geist Mono for code, KaTeX for mathematics.</p></div>
+    <div>
+      <div class="type-row"><span class="note">Display · 32/40 · 600</span><span style="font-size:var(--text-display);line-height:var(--leading-display);font-weight:600;letter-spacing:var(--tracking-tight)">Good afternoon, Mia</span></div>
+      <div class="type-row"><span class="note">Page · 24/32 · 600</span><span style="font-size:var(--text-page);line-height:var(--leading-page);font-weight:600;letter-spacing:var(--tracking-tight)">Explain it back</span></div>
+      <div class="type-row"><span class="note">Section · 18/26 · 600</span><span style="font-size:var(--text-section);line-height:var(--leading-section);font-weight:600">Maximum subarray</span></div>
+      <div class="type-row"><span class="note">Body large · 16/28</span><span style="font-size:var(--text-body-lg);line-height:var(--leading-body-lg)">Let <span class="tex" data-tex="D_i">D_i</span> be the largest sum of a non-empty subarray ending exactly at index <span class="tex" data-tex="i">i</span>.</span></div>
+      <div class="type-row"><span class="note">Body · 15/24</span><span>You covered the recurrence. You didn't explain why earlier subarrays can be dropped.</span></div>
+      <div class="type-row"><span class="note">Label · 14/20 · 500</span><span style="font-size:var(--text-label);font-weight:500">Check my understanding</span></div>
+      <div class="type-row"><span class="note">Caption · 12/16 · 500</span><span class="overline">Sample feedback · 3 of 5 checked</span></div>
+      <div class="type-row"><span class="note">Code · 14/24 mono</span><span style="font:var(--text-code)/var(--leading-code) var(--font-code)">best = max(best, current)</span></div>
+    </div>
+  </section>
+
+  <!-- ───────── Components ───────── -->
+  <section class="sec" id="components" aria-labelledby="h-components">
+    <div class="sec-head"><p class="overline">04</p><h2 id="h-components">Components</h2><p>Restyled shadcn/vue primitives. Pills for anything you press; 12 px fields; 16 px cards; 28 px composer.</p></div>
+
+    <div class="grid g2">
+      <div class="specimen">
+        <p class="overline">Button</p>
+        <div class="stack">
+          <div class="row">
+            <button class="btn btn-primary" type="button">Check my understanding</button>
+            <button class="btn btn-secondary" type="button">Add a deeper check</button>
+          </div>
+          <div class="row">
+            <button class="btn btn-outline" type="button">Do this later</button>
+            <button class="btn btn-ghost" type="button">Skip</button>
+            <button class="btn btn-icon" type="button" aria-label="More options"><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button>
+            <button class="btn btn-send" type="button" aria-label="Send"><svg class="i sm" aria-hidden="true"><use href="#i-up"/></svg></button>
+          </div>
+          <div class="row">
+            <button class="btn btn-primary" type="button" aria-disabled="true">Submit answers</button>
+            <span class="help">Answer all 5, or skip the rest.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="specimen">
+        <p class="overline">Segmented · Tabs / ToggleGroup</p>
+        <div class="stack">
+          <div class="seg" role="tablist" aria-label="Study source" data-demo="tabs">
+            <button type="button" role="tab" aria-selected="true">Topics</button>
+            <button type="button" role="tab" aria-selected="false">Sheets</button>
+            <button type="button" role="tab" aria-selected="false">Upload</button>
+          </div>
+          <div class="field">
+            <span class="label" id="conf-l">How sure are you?</span>
+            <div class="seg" role="group" aria-labelledby="conf-l" data-demo="toggle">
+              <button type="button" aria-pressed="false"><span class="sig" data-l="1" aria-hidden="true"><i></i><i></i><i></i></span>Low</button>
+              <button type="button" aria-pressed="true"><span class="sig" data-l="2" aria-hidden="true"><i></i><i></i><i></i></span>Medium</button>
+              <button type="button" aria-pressed="false"><span class="sig" data-l="3" aria-hidden="true"><i></i><i></i><i></i></span>High</button>
+            </div>
+            <span class="help">Confidence is neutral grey — it is never evidence.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="specimen">
+        <p class="overline">Question · RadioGroup option rows</p>
+        <fieldset style="border:0;margin:0;padding:0" class="stack">
+          <legend class="label" style="margin-bottom:12px;font-size:var(--text-body-lg);line-height:var(--leading-body-lg);font-weight:400">What does <span class="tex" data-tex="D_i">D_i</span> represent in Kadane's algorithm?</legend>
+          <div class="options">
+            <label class="option"><input type="radio" name="q1"> <span>Best sum of any subarray in <span class="tex" data-tex="\text{nums}[0..i]">nums[0..i]</span></span></label>
+            <label class="option"><input type="radio" name="q1" checked> <span>Best sum of a subarray ending exactly at <span class="tex" data-tex="i">i</span></span></label>
+            <label class="option"><input type="radio" name="q1"> <span>Sum of all elements up to <span class="tex" data-tex="i">i</span></span></label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="specimen">
+        <p class="overline">Inputs</p>
+        <div class="stack">
+          <label class="search"><svg class="i sm" aria-hidden="true"><use href="#i-search"/></svg><input type="search" placeholder="Search topics and sheets" aria-label="Search topics and sheets"></label>
+          <div class="field">
+            <label class="label" for="ta1">Your explanation</label>
+            <textarea class="textarea" id="ta1" placeholder="Explain the approach, the key steps, and why they hold."></textarea>
+          </div>
+          <label class="row" style="gap:12px"><input type="checkbox" class="switch" checked> <span>Include <b style="font-weight:500">Dynamic programming</b> in exam plan</span></label>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sub">Composer with help level</h3>
+    <div class="grid g2">
+      <div class="specimen plain stack">
+        <div class="composer">
+          <label class="sr-only" for="comp1">Message the companion</label>
+          <textarea id="comp1" rows="1" placeholder="Ask about this exercise…"></textarea>
+          <div class="bar">
+            <button class="btn btn-icon" type="button" aria-label="Attach or paste your work"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+            <span class="spacer"></span>
+            <button class="help-pick" type="button" aria-haspopup="menu">Help: <span class="lvl">Hints</span><svg class="i sm" aria-hidden="true"><use href="#i-down"/></svg></button>
+            <button class="btn btn-icon" type="button" aria-label="Speak"><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg></button>
+            <button class="btn btn-send" type="button" aria-label="Send"><svg class="i sm" aria-hidden="true"><use href="#i-up"/></svg></button>
+          </div>
+        </div>
+        <p class="note">The help level sits where the reference puts its model picker: always visible, one click to change. Levels: Questions only · Hints · Step-by-step · Show solution (asks first).</p>
+      </div>
+      <div class="specimen plain stack">
+        <div class="msg-user">I don't get why we can throw away the earlier subarrays.</div>
+        <div class="msg-ai">
+          <p>Think about two subarrays that both end at index <span class="tex" data-tex="i-1">i-1</span>. What happens to their difference when you append the same <span class="tex" data-tex="x">x</span> to both?</p>
+          <div class="hint"><span class="badge"><svg class="i xs" aria-hidden="true"><use href="#i-buoy"/></svg>Hint 1 of 3</span><p>Adding the same value to both keeps their order. The worse one can never overtake the better one.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sub">Feedback, check banner, dialog</h3>
+    <div class="grid g2">
+      <div class="feedback">
+        <span class="samplelabel"><svg class="i xs" aria-hidden="true"><use href="#i-info"/></svg>Sample feedback — prepared for this walkthrough</span>
+        <div class="fb-sec"><h4>Covered</h4><ul>
+          <li class="ok"><svg class="i sm" aria-hidden="true"><use href="#i-check"/></svg>Defined <span class="tex" data-tex="D_i">D_i</span> as the best sum ending at <span class="tex" data-tex="i">i</span></li>
+          <li class="ok"><svg class="i sm" aria-hidden="true"><use href="#i-check"/></svg>Stated the recurrence correctly</li>
+        </ul></div>
+        <div class="fb-sec"><h4>Gap</h4><p class="gapline">You didn't explain why the best subarray ending at <span class="tex" data-tex="i-1">i-1</span> is the only one worth extending.</p></div>
+        <div class="fb-sec"><h4>Next</h4><div class="row"><button class="btn btn-primary" type="button">Continue to post-quiz</button><button class="btn btn-secondary" type="button">Defend this step</button></div></div>
+      </div>
+      <div class="stack">
+        <div class="checkbar" role="status">
+          <svg class="i" aria-hidden="true"><use href="#i-eye-off"/></svg>
+          <span class="msg"><b>Independent check.</b> Your chat and solutions are hidden.</span>
+          <button class="btn btn-ghost btn-sm" type="button">Show references</button>
+        </div>
+        <div class="checkbar assisted">
+          <svg class="i" aria-hidden="true"><use href="#i-buoy"/></svg>
+          <span class="msg"><b>Assisted attempt.</b> References visible — this won't count as independent.</span>
+          <button class="btn btn-ghost btn-sm" type="button">Hide again</button>
+        </div>
+        <div class="dlg-static" role="group" aria-label="Skip confirmation specimen">
+          <h3>Skip this check?</h3>
+          <p><b style="color:var(--foreground);font-weight:500">Recurrence</b> and <b style="color:var(--foreground);font-weight:500">Optimal substructure</b> will stay <span class="badge unv" style="vertical-align:middle"><svg class="i xs" aria-hidden="true"><use href="#i-dashed"/></svg>Unverified</span>. You can come back from Review.</p>
+          <div class="actions"><button class="btn btn-ghost" type="button">Skip</button><button class="btn btn-primary" type="button">Keep going</button></div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sub">Code, empty state, toast</h3>
+    <div class="grid g2">
+      <div class="code">
+        <div class="code-head"><span>Python</span><button class="btn btn-ghost btn-sm" type="button" data-copy><svg class="i xs" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div>
+<pre tabindex="0" aria-label="Python code: Kadane's algorithm"><code><span class="tk-k">def</span> <span class="tk-f">max_subarray</span>(nums: <span class="tk-t">list</span>[<span class="tk-t">int</span>]) -&gt; <span class="tk-t">int</span>:
+    current = best = nums[<span class="tk-n">0</span>]
+    <span class="tk-k">for</span> x <span class="tk-k">in</span> nums[<span class="tk-n">1</span>:]:
+        current = <span class="tk-f">max</span>(x, current + x)  <span class="tk-c"># extend or restart</span>
+        best = <span class="tk-f">max</span>(best, current)
+    <span class="tk-k">return</span> best</code></pre>
+      </div>
+      <div class="stack">
+        <div class="empty">
+          <svg class="i" aria-hidden="true"><use href="#i-inbox"/></svg>
+          <p style="font-weight:500">No saved questions yet</p>
+          <p class="help">Save questions from a session summary to review them later.</p>
+          <button class="btn btn-secondary" type="button">Go to last summary</button>
+        </div>
+        <div><span class="toast" role="status"><svg class="i sm" aria-hidden="true"><use href="#i-check"/></svg>3 questions saved to Review</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Evidence grammar ───────── -->
+  <section class="sec" id="states" aria-labelledby="h-states">
+    <div class="sec-head"><p class="overline">05</p><h2 id="h-states">Evidence grammar</h2><p>Three kinds of information, three visual languages. They sit side by side; they are never merged.</p></div>
+    <div class="grid g3">
+      <div class="specimen">
+        <p class="overline">Evidence · what the check showed</p>
+        <div class="stack" style="justify-items:start">
+          <span class="badge demo"><svg class="i xs" aria-hidden="true"><use href="#i-check-circle"/></svg>Demonstrated</span>
+          <span class="badge part"><svg class="i xs" aria-hidden="true"><use href="#i-contrast"/></svg>Partial</span>
+          <span class="badge gap"><svg class="i xs" aria-hidden="true"><use href="#i-alert"/></svg>Gap observed</span>
+          <span class="badge unv"><svg class="i xs" aria-hidden="true"><use href="#i-dashed"/></svg>Unverified</span>
+        </div>
+      </div>
+      <div class="specimen">
+        <p class="overline">Condition · how it was produced</p>
+        <div class="stack" style="justify-items:start">
+          <span class="badge outline"><svg class="i xs" aria-hidden="true"><use href="#i-user"/></svg>Independent</span>
+          <span class="badge assist"><svg class="i xs" aria-hidden="true"><use href="#i-buoy"/></svg>Assisted</span>
+          <span class="badge outline"><svg class="i xs" aria-hidden="true"><use href="#i-skip"/></svg>Skipped</span>
+          <span class="badge outline"><svg class="i xs" aria-hidden="true"><use href="#i-clock"/></svg>Deferred</span>
+        </div>
+      </div>
+      <div class="specimen">
+        <p class="overline">Confidence · what you believed</p>
+        <div class="stack" style="justify-items:start">
+          <span class="badge neutral"><span class="sig" data-l="1" aria-hidden="true"><i></i><i></i><i></i></span>You said: Low</span>
+          <span class="badge neutral"><span class="sig" data-l="2" aria-hidden="true"><i></i><i></i><i></i></span>You said: Medium</span>
+          <span class="badge neutral"><span class="sig" data-l="3" aria-hidden="true"><i></i><i></i><i></i></span>You said: High</span>
+          <span class="badge neutral"><svg class="i xs" aria-hidden="true"><use href="#i-minus"/></svg>Not rated</span>
+        </div>
+      </div>
+    </div>
+    <h3 class="sub">Concept row — mixed results stay visible</h3>
+    <div class="concepts">
+      <div class="crow">
+        <div><div class="name">Kadane's algorithm</div><div class="meta">5 sub-concepts · 3 checked independently</div></div>
+        <div class="minibar" role="img" aria-label="2 demonstrated, 1 partial, 1 gap, 1 unverified"><span class="demo"></span><span class="demo"></span><span class="part"></span><span class="gap"></span><span class="unv"></span></div>
+        <div class="subrows">
+          <div class="subrow"><span class="nm">Subproblem definition <span class="tex" data-tex="D_i">D_i</span></span><span class="badge demo"><svg class="i xs" aria-hidden="true"><use href="#i-check-circle"/></svg>Demonstrated</span><span class="badge outline"><svg class="i xs" aria-hidden="true"><use href="#i-user"/></svg>Independent</span></div>
+          <div class="subrow"><span class="nm">Why earlier subarrays can be dropped</span><span class="badge gap"><svg class="i xs" aria-hidden="true"><use href="#i-alert"/></svg>Gap observed</span><span class="badge outline"><svg class="i xs" aria-hidden="true"><use href="#i-user"/></svg>Independent</span><button class="btn btn-ghost btn-sm" type="button">Try a twin problem<svg class="i xs" aria-hidden="true"><use href="#i-arrow-right"/></svg></button></div>
+          <div class="subrow"><span class="nm">Answer extraction <span class="tex" data-tex="\max_i D_i">max D_i</span></span><span class="badge unv"><svg class="i xs" aria-hidden="true"><use href="#i-dashed"/></svg>Unverified</span><span class="badge outline"><svg class="i xs" aria-hidden="true"><use href="#i-skip"/></svg>Skipped</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Screens ───────── -->
+  <section class="sec" id="screens" aria-labelledby="h-screens">
+    <div class="sec-head"><p class="overline">06</p><h2 id="h-screens">Screen compositions</h2><p>Each frame reflows with its own width (resize the window). The Verify frame is interactive: try <em>Show references</em>.</p></div>
+
+    <!-- Work -->
+    <div class="frame-label"><h3>Work · companion session</h3><span class="badge neutral">Thread 768 px + session panel 320 px</span></div>
+    <div class="frame">
+      <div class="app">
+        <nav class="rail" aria-label="Main (specimen)">
+          <span class="mark" aria-hidden="true" style="margin-bottom:8px"><svg class="i"><use href="#i-check"/></svg></span>
+          <button class="btn btn-icon" type="button" aria-label="New session"><svg class="i" aria-hidden="true"><use href="#i-pen"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Overview"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Study" aria-current="page"><svg class="i" aria-hidden="true"><use href="#i-book"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Concepts"><svg class="i" aria-hidden="true"><use href="#i-network"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Review"><svg class="i" aria-hidden="true"><use href="#i-library"/></svg></button>
+          <span class="spacer"></span><span class="avatar" aria-hidden="true">MK</span>
+        </nav>
+        <div class="app-main">
+          <div class="topbar">
+            <div class="crumb">Algorithms &amp; DS <svg class="i xs" aria-hidden="true"><use href="#i-right"/></svg> <b>Maximum subarray</b></div>
+            <div class="stepper mid-stage" aria-label="Session stage">
+              <span class="step done"><svg class="i xs" aria-hidden="true"><use href="#i-check"/></svg>Prepare</span>
+              <span class="step current" aria-current="step">Work</span>
+              <span class="step">Verify</span><span class="step">Review</span>
+            </div>
+            <span class="stage-compact">Work · 2 of 4</span>
+            <div class="top-actions"><button class="btn btn-icon" type="button" aria-label="Session panel"><svg class="i" aria-hidden="true"><use href="#i-panel"/></svg></button></div>
+          </div>
+          <div class="canvas with-panel">
+            <div class="col">
+              <div class="problem">
+                <div class="ph"><span class="overline">Sheet 4 · Exercise 2</span><button class="btn btn-icon" type="button" aria-label="Collapse problem"><svg class="i sm" aria-hidden="true"><use href="#i-down"/></svg></button></div>
+                <p class="card-title">Maximum subarray</p>
+                <p>Given <span class="tex" data-tex="\text{nums} \in \mathbb{Z}^n">nums ∈ Z^n</span>, return the largest sum of a non-empty contiguous subarray in <span class="tex" data-tex="O(n)">O(n)</span> time.</p>
+              </div>
+              <div class="thread-head">
+                <span class="note">Companion · help level <b style="color:var(--assist-foreground);font-weight:500">Hints</b></span>
+                <button class="btn btn-primary" type="button">Check my understanding</button>
+              </div>
+              <div class="thread">
+                <div class="msg-user">Where do I even start? I keep thinking about all subarrays.</div>
+                <div class="msg-ai">
+                  <p>Fix the <em>end</em> instead of the whole subarray. If you knew the best sum ending at index <span class="tex" data-tex="i-1">i-1</span>, what are your options at index <span class="tex" data-tex="i">i</span>?</p>
+                </div>
+                <div class="msg-user">Either start fresh at nums[i] or extend the previous one.</div>
+                <div class="msg-ai">
+                  <p>Right — that's the whole recurrence:</p>
+                  <div class="tex-block" data-tex="D_i = \max\bigl(\text{nums}[i],\; D_{i-1} + \text{nums}[i]\bigr)">D_i = max(nums[i], D_{i-1} + nums[i])</div>
+                  <div class="hint"><span class="badge"><svg class="i xs" aria-hidden="true"><use href="#i-buoy"/></svg>Hint 2 of 3</span><p>The final answer isn't <span class="tex" data-tex="D_{n-1}">D_{n-1}</span>. Which value should you return?</p></div>
+                </div>
+              </div>
+              <div class="composer">
+                <label class="sr-only" for="comp2">Message the companion</label>
+                <textarea id="comp2" rows="1" placeholder="Ask, or paste your attempt…"></textarea>
+                <div class="bar">
+                  <button class="btn btn-icon" type="button" aria-label="Attach or paste your work"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+                  <span class="spacer"></span>
+                  <button class="help-pick" type="button" aria-haspopup="menu">Help: <span class="lvl">Hints</span><svg class="i sm" aria-hidden="true"><use href="#i-down"/></svg></button>
+                  <button class="btn btn-icon" type="button" aria-label="Speak"><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg></button>
+                  <button class="btn btn-send" type="button" aria-label="Send"><svg class="i sm" aria-hidden="true"><use href="#i-up"/></svg></button>
+                </div>
+              </div>
+            </div>
+            <aside class="panel" aria-label="Session panel (specimen)">
+              <div class="p-sec"><span class="p-title">This session</span><span class="p-line">Maximum subarray · started 14:05</span></div>
+              <div class="p-sec">
+                <span class="p-title">Checks</span>
+                <span class="p-line ok"><svg class="i sm" aria-hidden="true"><use href="#i-check"/></svg>Pre-quiz · baseline saved</span>
+                <span class="p-line"><span class="dot unv" aria-hidden="true"></span>Explain it back</span>
+                <span class="p-line"><span class="dot unv" aria-hidden="true"></span>Post-quiz</span>
+              </div>
+              <div class="p-sec"><span class="p-title">Help used</span><span class="p-line"><svg class="i sm" aria-hidden="true" style="color:var(--assist-foreground)"><use href="#i-buoy"/></svg>2 hints · no solution shown</span></div>
+              <div class="p-sec"><button class="btn btn-ghost btn-sm" type="button" style="justify-self:start">Leave &amp; resume later</button></div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verify -->
+    <div class="frame-label"><h3>Verify · explain it back (check mode)</h3><span class="badge check"><svg class="i xs" aria-hidden="true"><use href="#i-eye-off"/></svg>Interactive</span></div>
+    <div class="frame">
+      <div class="app">
+        <nav class="rail" aria-label="Main (specimen)">
+          <span class="mark" aria-hidden="true" style="margin-bottom:8px"><svg class="i"><use href="#i-check"/></svg></span>
+          <button class="btn btn-icon" type="button" aria-label="New session"><svg class="i" aria-hidden="true"><use href="#i-pen"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Overview"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Study" aria-current="page"><svg class="i" aria-hidden="true"><use href="#i-book"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Concepts"><svg class="i" aria-hidden="true"><use href="#i-network"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Review"><svg class="i" aria-hidden="true"><use href="#i-library"/></svg></button>
+          <span class="spacer"></span><span class="avatar" aria-hidden="true">MK</span>
+        </nav>
+        <div class="app-main">
+          <div class="topbar">
+            <div class="crumb">Algorithms &amp; DS <svg class="i xs" aria-hidden="true"><use href="#i-right"/></svg> <b>Maximum subarray</b></div>
+            <div class="stepper mid-stage" aria-label="Session stage">
+              <span class="step done"><svg class="i xs" aria-hidden="true"><use href="#i-check"/></svg>Prepare</span>
+              <span class="step done"><svg class="i xs" aria-hidden="true"><use href="#i-check"/></svg>Work</span>
+              <span class="step current checkmode" aria-current="step">Verify</span><span class="step">Review</span>
+            </div>
+            <span class="stage-compact">Verify · 3 of 4</span>
+            <div class="top-actions"><button class="btn btn-icon" type="button" aria-label="More options"><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button></div>
+          </div>
+          <div class="canvas">
+            <div class="col" id="verify">
+              <div class="checkbar" id="vbar">
+                <svg class="i" aria-hidden="true"><use href="#i-eye-off"/></svg>
+                <span class="msg"><b>Independent check.</b> Your chat and solutions are hidden.</span>
+                <button class="btn btn-ghost btn-sm" type="button" id="showRefs">Show references</button>
+              </div>
+              <div class="problem">
+                <span class="overline">Sheet 4 · Exercise 2</span>
+                <p class="card-title">Maximum subarray</p>
+                <p>Given <span class="tex" data-tex="\text{nums} \in \mathbb{Z}^n">nums ∈ Z^n</span>, return the largest sum of a non-empty contiguous subarray in <span class="tex" data-tex="O(n)">O(n)</span> time.</p>
+              </div>
+              <div id="refs" hidden class="swap">
+                <div class="hint"><span class="badge"><svg class="i xs" aria-hidden="true"><use href="#i-buoy"/></svg>Reference · from your work session</span><p>Recurrence: <span class="tex" data-tex="D_i = \max(\text{nums}[i],\, D_{i-1} + \text{nums}[i])">D_i = …</span>; answer is <span class="tex" data-tex="\max_i D_i">max D_i</span>.</p></div>
+              </div>
+              <div class="stack" style="gap:8px">
+                <h4 style="font-size:var(--text-page);line-height:var(--leading-page);font-weight:600;letter-spacing:var(--tracking-tight)">Explain it back</h4>
+                <p class="help">Explain the approach, the key steps, and why they hold. Feedback appears after you submit.</p>
+              </div>
+              <div class="stack" style="gap:8px">
+                <div class="seg" role="group" aria-label="Input method" data-demo="toggle" style="justify-self:start">
+                  <button type="button" aria-pressed="true"><svg class="i xs" aria-hidden="true"><use href="#i-type"/></svg>Type</button>
+                  <button type="button" aria-pressed="false"><svg class="i xs" aria-hidden="true"><use href="#i-mic"/></svg>Speak</button>
+                </div>
+                <label class="sr-only" for="explain">Your explanation</label>
+                <textarea class="textarea" id="explain" rows="6" style="border-radius:var(--radius-card);min-height:168px">For each index I keep the best sum of a subarray that ends there. It's either just nums[i] or the previous best plus nums[i]. </textarea>
+                <div class="row" style="justify-content:space-between">
+                  <button class="btn btn-ghost" type="button" data-open="skipDlg"><svg class="i sm" aria-hidden="true"><use href="#i-skip"/></svg>Skip this check</button>
+                  <div class="row" style="gap:8px"><button class="btn btn-outline" type="button">Do this later</button><button class="btn btn-primary" type="button">Submit explanation</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="frame-label"><h3>Review · session summary</h3><span class="badge neutral">Page 1040 px</span></div>
+    <div class="frame">
+      <div class="app">
+        <nav class="rail" aria-label="Main (specimen)">
+          <span class="mark" aria-hidden="true" style="margin-bottom:8px"><svg class="i"><use href="#i-check"/></svg></span>
+          <button class="btn btn-icon" type="button" aria-label="New session"><svg class="i" aria-hidden="true"><use href="#i-pen"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Overview"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Study" aria-current="page"><svg class="i" aria-hidden="true"><use href="#i-book"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Concepts"><svg class="i" aria-hidden="true"><use href="#i-network"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Review"><svg class="i" aria-hidden="true"><use href="#i-library"/></svg></button>
+          <span class="spacer"></span><span class="avatar" aria-hidden="true">MK</span>
+        </nav>
+        <div class="app-main">
+          <div class="topbar">
+            <div class="crumb">Algorithms &amp; DS <svg class="i xs" aria-hidden="true"><use href="#i-right"/></svg> <b>Maximum subarray</b></div>
+            <div class="stepper mid-stage" aria-label="Session stage">
+              <span class="step done"><svg class="i xs" aria-hidden="true"><use href="#i-check"/></svg>Prepare</span>
+              <span class="step done"><svg class="i xs" aria-hidden="true"><use href="#i-check"/></svg>Work</span>
+              <span class="step done"><span class="dot unv" aria-hidden="true"></span>Verify<span class="sr-only"> (one check skipped)</span></span>
+              <span class="step current" aria-current="step">Review</span>
+            </div>
+            <span class="stage-compact">Review · 4 of 4</span>
+            <div class="top-actions"><button class="btn btn-icon" type="button" aria-label="More options"><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button></div>
+          </div>
+          <div class="canvas">
+            <div class="col wide">
+              <div class="stack" style="gap:6px">
+                <span class="overline">Session summary</span>
+                <p class="big">You showed the recurrence on your own. Why it's safe to drop earlier subarrays is still a gap.</p>
+              </div>
+              <div class="sum-grid">
+                <div class="sum-block"><h4><svg class="i sm" aria-hidden="true" style="color:var(--evidence-demonstrated-foreground)"><use href="#i-check-circle"/></svg>Demonstrated</h4><ul><li>Subproblem definition</li><li>Recurrence</li></ul></div>
+                <div class="sum-block"><h4><svg class="i sm" aria-hidden="true" style="color:var(--evidence-gap-foreground)"><use href="#i-alert"/></svg>Gaps &amp; unverified</h4><ul><li>Optimal substructure — gap</li><li>Answer extraction — skipped</li></ul></div>
+                <div class="sum-block"><h4><svg class="i sm" aria-hidden="true"><use href="#i-arrow-right"/></svg>Before → after</h4><p><span style="font-size:var(--text-page);color:var(--foreground);font-weight:600">2 → 4</span> of 5 repeated questions</p><p>Immediate result on this check — not long-term retention.</p></div>
+                <div class="sum-block"><h4><svg class="i sm" aria-hidden="true"><use href="#i-retry"/></svg>Next</h4><p>A twin problem on optimal substructure (~5 min).</p><button class="btn btn-secondary btn-sm" type="button" style="justify-self:start">Try twin problem</button></div>
+              </div>
+              <div class="table-wrap">
+                <table class="prepost">
+                  <caption class="sr-only">Repeated questions, before and after</caption>
+                  <thead><tr><th scope="col">Repeated question</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">You said</th></tr></thead>
+                  <tbody>
+                    <tr><td>Meaning of <span class="tex" data-tex="D_i">D_i</span></td><td><span class="res r-no"><svg class="i sm" aria-hidden="true"><use href="#i-x"/></svg>Incorrect</span></td><td><span class="res r-ok"><svg class="i sm" aria-hidden="true"><use href="#i-check"/></svg>Correct</span></td><td><span class="badge neutral"><span class="sig" data-l="3" aria-hidden="true"><i></i><i></i><i></i></span>High</span></td></tr>
+                    <tr><td>Why discard earlier subarrays</td><td><span class="res r-no"><svg class="i sm" aria-hidden="true"><use href="#i-x"/></svg>Incorrect</span></td><td><span class="res r-no"><svg class="i sm" aria-hidden="true"><use href="#i-x"/></svg>Incorrect</span></td><td><span class="badge neutral"><span class="sig" data-l="3" aria-hidden="true"><i></i><i></i><i></i></span>High</span></td></tr>
+                    <tr><td>Return value</td><td><span class="res r-ok"><svg class="i sm" aria-hidden="true"><use href="#i-check"/></svg>Correct</span></td><td><span class="res r-skip"><svg class="i sm" aria-hidden="true"><use href="#i-skip"/></svg>Skipped</span></td><td><span class="badge neutral"><svg class="i xs" aria-hidden="true"><use href="#i-minus"/></svg>Not rated</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="row" style="justify-content:flex-end">
+                <button class="btn btn-secondary" type="button"><svg class="i sm" aria-hidden="true"><use href="#i-bookmark"/></svg>Save 3 questions to Review</button>
+                <button class="btn btn-primary" type="button">Back to Overview</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overview -->
+    <div class="frame-label"><h3>Overview · what should I do next?</h3><span class="badge neutral">Page 1040 px</span></div>
+    <div class="frame">
+      <div class="app">
+        <nav class="rail" aria-label="Main (specimen)">
+          <span class="mark" aria-hidden="true" style="margin-bottom:8px"><svg class="i"><use href="#i-check"/></svg></span>
+          <button class="btn btn-icon" type="button" aria-label="New session"><svg class="i" aria-hidden="true"><use href="#i-pen"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Overview" aria-current="page"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Study"><svg class="i" aria-hidden="true"><use href="#i-book"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Concepts"><svg class="i" aria-hidden="true"><use href="#i-network"/></svg></button>
+          <button class="btn btn-icon" type="button" aria-label="Review"><svg class="i" aria-hidden="true"><use href="#i-library"/></svg></button>
+          <span class="spacer"></span><span class="avatar" aria-hidden="true">MK</span>
+        </nav>
+        <div class="app-main">
+          <div class="topbar">
+            <div class="crumb"><b>Algorithms &amp; Data Structures</b><svg class="i xs" aria-hidden="true"><use href="#i-down"/></svg></div>
+            <div class="top-actions"><span class="badge outline"><svg class="i xs" aria-hidden="true"><use href="#i-calendar"/></svg>Exam in 23 days</span></div>
+          </div>
+          <div class="canvas">
+            <div class="col wide">
+              <p class="greet">Good afternoon, Mia</p>
+              <div class="next">
+                <span class="overline">Next</span>
+                <p class="card-title">Finish verifying “Maximum subarray”</p>
+                <p class="why">You stopped before the post-quiz. Explain it back is done; 1 check left (~4 min).</p>
+                <div class="row"><button class="btn btn-primary" type="button">Resume session</button><button class="btn btn-ghost" type="button">Start something else</button></div>
+              </div>
+              <div class="statgrid">
+                <div class="stat"><span class="note">Due for review</span><span class="num">6</span><span class="note">questions · ~8 min</span></div>
+                <div class="stat"><span class="note">Concepts checked</span><span class="num">7 <span style="font-size:var(--text-section);color:var(--muted-foreground);font-weight:500">of 12</span></span><span class="note">checked ≠ exam-ready</span></div>
+                <div class="stat"><span class="note">Open gaps</span><span class="num">2</span><span class="note"><span class="dot gap" aria-hidden="true"></span>Optimal substructure, Master theorem</span></div>
+              </div>
+              <div class="stack" style="gap:8px">
+                <div class="row" style="justify-content:space-between"><h4 class="card-title">Concepts</h4><button class="btn btn-ghost btn-sm" type="button">View all<svg class="i xs" aria-hidden="true"><use href="#i-arrow-right"/></svg></button></div>
+                <div class="concepts">
+                  <div class="crow"><div><div class="name">Dynamic programming</div><div class="meta">2 demonstrated · 1 partial · 1 gap · 1 unverified</div></div><div class="minibar" aria-hidden="true"><span class="demo"></span><span class="demo"></span><span class="part"></span><span class="gap"></span><span class="unv"></span></div></div>
+                  <div class="crow"><div><div class="name">Divide and conquer</div><div class="meta">3 demonstrated · 1 gap</div></div><div class="minibar" aria-hidden="true"><span class="demo"></span><span class="demo"></span><span class="demo"></span><span class="gap"></span></div></div>
+                  <div class="crow"><div><div class="name">Graph search</div><div class="meta">Not checked yet</div></div><div class="minibar" aria-hidden="true"><span class="unv"></span><span class="unv"></span><span class="unv"></span></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── Voice ───────── -->
+  <section class="sec" id="voice" aria-labelledby="h-voice">
+    <div class="sec-head"><p class="overline">07</p><h2 id="h-voice">Voice</h2><p>Direct, calm, specific. Lukas wants no praise; Wei needs one next step.</p></div>
+    <div class="dont">
+      <div class="do-card y"><span class="tag"><svg class="i xs" aria-hidden="true"><use href="#i-check"/></svg>Write</span><p>You covered the recurrence. You didn't explain why earlier subarrays can be dropped.</p></div>
+      <div class="do-card n"><span class="tag"><svg class="i xs" aria-hidden="true"><use href="#i-x"/></svg>Don't</span><p>Great job! You're almost there 🎉</p></div>
+      <div class="do-card y"><span class="tag"><svg class="i xs" aria-hidden="true"><use href="#i-check"/></svg>Write</span><p>Skipping leaves <em>Optimal substructure</em> unverified. You can come back from Review.</p></div>
+      <div class="do-card n"><span class="tag"><svg class="i xs" aria-hidden="true"><use href="#i-x"/></svg>Don't</span><p>Are you sure? You'll lose all your progress!</p></div>
+      <div class="do-card y"><span class="tag"><svg class="i xs" aria-hidden="true"><use href="#i-check"/></svg>Write</span><p>7 of 12 concepts checked</p></div>
+      <div class="do-card n"><span class="tag"><svg class="i xs" aria-hidden="true"><use href="#i-x"/></svg>Don't</span><p>58 % mastered · exam ready soon</p></div>
+    </div>
+  </section>
+
+  <footer class="board-foot">Prove-it Companion · design system 0.1 · 19 October 2026. Specimen content is fictional; feedback is prepared, not generated. See DESIGN_SYSTEM.md for the full specification.</footer>
+</main>
+
+<dialog class="dlg" id="skipDlg" aria-labelledby="skipT">
+  <h3 id="skipT">Skip this check?</h3>
+  <p>The sub-concepts in <b style="color:var(--foreground);font-weight:500">Explain it back</b> will stay <span class="badge unv" style="vertical-align:middle"><svg class="i xs" aria-hidden="true"><use href="#i-dashed"/></svg>Unverified</span>. Your draft is kept and you can return from Review.</p>
+  <div class="actions"><button class="btn btn-ghost" type="button" data-close>Skip</button><button class="btn btn-primary" type="button" data-close autofocus>Keep going</button></div>
+</dialog>
+<dialog class="dlg" id="refDlg" aria-labelledby="refT">
+  <h3 id="refT">Show references?</h3>
+  <p>Your chat and worked solution will be visible. This attempt will count as <span class="badge assist" style="vertical-align:middle"><svg class="i xs" aria-hidden="true"><use href="#i-buoy"/></svg>Assisted</span>, not independent. Your draft is kept.</p>
+  <div class="actions"><button class="btn btn-ghost" type="button" data-close>Cancel</button><button class="btn btn-primary" type="button" id="confirmRefs">Show references</button></div>
+</dialog>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script>
+(function () {
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  function apply(pref) {
+    root.dataset.themePref = pref;
+    root.classList.toggle('dark', pref === 'dark' || (pref === 'system' && mq.matches));
+    document.querySelectorAll('[data-theme]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.theme === pref)); });
+  }
+  apply(root.dataset.themePref || 'system');
+  document.querySelectorAll('[data-theme]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      try { localStorage.setItem('proveit-theme', b.dataset.theme); } catch (e) {}
+      apply(b.dataset.theme);
+    });
+  });
+  mq.addEventListener && mq.addEventListener('change', function () { if (root.dataset.themePref === 'system') apply('system'); });
+
+  /* Segmented demos */
+  document.querySelectorAll('[data-demo]').forEach(function (g) {
+    var attr = g.dataset.demo === 'tabs' ? 'aria-selected' : 'aria-pressed';
+    g.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        g.querySelectorAll('button').forEach(function (o) { o.setAttribute(attr, 'false'); });
+        b.setAttribute(attr, 'true');
+      });
+    });
+  });
+
+  /* Dialogs */
+  document.querySelectorAll('[data-open]').forEach(function (b) {
+    b.addEventListener('click', function () { document.getElementById(b.dataset.open).showModal(); });
+  });
+  document.querySelectorAll('dialog [data-close]').forEach(function (b) {
+    b.addEventListener('click', function () { b.closest('dialog').close(); });
+  });
+
+  /* Verify: show references → confirm → assisted (draft preserved) */
+  var bar = document.getElementById('vbar'), refs = document.getElementById('refs'), btn = document.getElementById('showRefs');
+  var refDlg = document.getElementById('refDlg');
+  btn.addEventListener('click', function () {
+    if (bar.classList.contains('assisted')) {
+      bar.classList.remove('assisted'); refs.hidden = true;
+      bar.querySelector('.msg').innerHTML = '<b>Independent check.</b> Your chat and solutions are hidden. (This attempt stays assisted — start a fresh one to count as independent.)';
+      bar.querySelector('use').setAttribute('href', '#i-eye-off'); btn.textContent = 'Show references';
+    } else { refDlg.showModal(); }
+  });
+  document.getElementById('confirmRefs').addEventListener('click', function () {
+    refDlg.close();
+    bar.classList.add('assisted'); refs.hidden = false; refs.style.opacity = 0;
+    requestAnimationFrame(function () { refs.style.opacity = 1; });
+    bar.querySelector('.msg').innerHTML = '<b>Assisted attempt.</b> References visible — this won\'t count as independent.';
+    bar.querySelector('use').setAttribute('href', '#i-buoy'); btn.textContent = 'Hide again';
+    btn.focus();
+  });
+
+  /* Copy */
+  document.querySelectorAll('[data-copy]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var src = b.closest('.code').querySelector('code').innerText;
+      var done = function () { b.querySelector('span').textContent = 'Copied'; setTimeout(function () { b.querySelector('span').textContent = 'Copy'; }, 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(src).then(done, done); else done();
+    });
+  });
+
+  /* KaTeX: render [data-tex]; fallback leaves readable TeX source */
+  window.addEventListener('load', function () {
+    if (!window.katex) return;
+    document.querySelectorAll('.tex, .tex-block').forEach(function (el) {
+      try { katex.render(el.dataset.tex, el, { displayMode: el.classList.contains('tex-block'), throwOnError: false, output: 'htmlAndMathml', trust: false }); } catch (e) {}
+    });
+  });
+})();
+</script>
+</body>
+</html>

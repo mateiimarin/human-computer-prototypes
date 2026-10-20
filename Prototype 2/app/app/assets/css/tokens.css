@@ -1,0 +1,219 @@
+/* Prove-it Companion v0.3 — canonical design values, light + dark.
+   Full CSS colors: use var(--primary), never hsl(var(--primary)).
+   Dark theme is applied with the `.dark` class on <html> (shadcn-vue / @nuxtjs/color-mode convention).
+   Domain components consume semantic tokens only — never raw hex values. */
+
+:root {
+  color-scheme: light;
+
+  /* ── Neutral foundation (shadcn-vue semantic pairs) ─────────────── */
+  --background: #ffffff;
+  --foreground: #0d0d0d;
+  --card: #ffffff;
+  --card-foreground: var(--foreground);
+  --popover: #ffffff;
+  --popover-foreground: var(--foreground);
+  --primary: #0d0d0d;              /* monochrome primary: ink pill */
+  --primary-foreground: #ffffff;
+  --primary-hover: #2b2b2b;
+  --secondary: #f4f4f4;
+  --secondary-foreground: var(--foreground);
+  --muted: #f4f4f4;
+  --muted-foreground: #5d5d5d;
+  --accent: #ececec;               /* hover / selected row fill */
+  --accent-foreground: var(--foreground);
+  --border: #e6e6e6;               /* decorative dividers only */
+  --input: #8a8a8a;                /* control edges that must be seen (3:1) */
+  --ring: #2f6fe4;
+  --surface-raised: #f9f9f9;       /* problem card, session panel, code block */
+  --composer: #f4f4f4;             /* chat / answer composer fill */
+  --link: #1f5fd6;
+  --selection: #dbe7fd;
+  --scrim: rgb(13 13 13 / 40%);
+
+  /* ── Evidence (concept traffic light) — always paired with icon + label ── */
+  --evidence-demonstrated: #e7f5ec;
+  --evidence-demonstrated-foreground: #17663f;
+  --evidence-demonstrated-dot: #1e9e5a;
+  --evidence-partial: #fcf2d9;
+  --evidence-partial-foreground: #7d5300;
+  --evidence-partial-dot: #b57d00;
+  --evidence-gap: #fdebea;
+  --evidence-gap-foreground: #ac2e25;
+  --evidence-gap-dot: #df3b2f;
+  --evidence-unverified: #f1f1f1;
+  --evidence-unverified-foreground: #5d5d5d;
+  --evidence-unverified-dot: #8a8a8a;   /* drawn as a dashed ring, never filled */
+
+  /* ── Modes & conditions ─────────────────────────────────────────── */
+  --assist: #f1edfb;               /* companion help, revealed solutions, "Assisted" */
+  --assist-foreground: #5b3fb5;
+  --check: #e9f0fd;                /* independent-check mode: references hidden */
+  --check-foreground: #1d55c0;
+
+  --destructive: #c42b20;
+  --destructive-foreground: #ffffff;
+  --destructive-surface: #fdebea;
+
+  /* shadcn-vue compatibility */
+  --chart-1: var(--evidence-demonstrated-dot);
+  --chart-2: var(--evidence-partial-dot);
+  --chart-3: var(--evidence-gap-dot);
+  --chart-4: var(--evidence-unverified-dot);
+  --chart-5: var(--assist-foreground);
+  --sidebar: #f9f9f9;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  /* ── Typography ─────────────────────────────────────────────────── */
+  --font-body: "Geist", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: var(--font-body);
+  --font-code: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --text-display: 2rem;      --leading-display: 2.5rem;    /* 32/40 — Overview greeting, summary headline */
+  --text-page: 1.5rem;       --leading-page: 2rem;         /* 24/32 — destination H1 */
+  --text-section: 1.125rem;  --leading-section: 1.625rem;  /* 18/26 — section heading */
+  --text-body-lg: 1rem;      --leading-body-lg: 1.75rem;   /* 16/28 — companion prose, questions */
+  --text-body: .9375rem;     --leading-body: 1.5rem;       /* 15/24 — UI body, rows */
+  --text-label: .875rem;     --leading-label: 1.25rem;     /* 14/20 — controls, metadata */
+  --text-caption: .75rem;    --leading-caption: 1rem;      /* 12/16 — overline, counts */
+  --text-code: .875rem;      --leading-code: 1.5rem;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --tracking-tight: -0.015em;  /* headings ≥ 18px */
+
+  /* ── Space (4px base) ───────────────────────────────────────────── */
+  --space-1: .25rem;  --space-2: .5rem;   --space-3: .75rem;  --space-4: 1rem;
+  --space-5: 1.25rem; --space-6: 1.5rem;  --space-8: 2rem;    --space-10: 2.5rem;
+  --space-12: 3rem;   --space-16: 4rem;
+
+  /* ── Shape ──────────────────────────────────────────────────────── */
+  --radius: .75rem;              /* shadcn base */
+  --radius-tag: .375rem;         /* 6  — inline code, kbd */
+  --radius-row: .625rem;         /* 10 — nav rows, list rows, menu items */
+  --radius-field: .75rem;        /* 12 — textarea, select trigger, option rows */
+  --radius-card: 1rem;           /* 16 — cards, code blocks, problem card, dialogs */
+  --radius-panel: 1.25rem;       /* 20 — floating session panel, sheets */
+  --radius-composer: 1.75rem;    /* 28 — composer / explain-it-back input */
+  --radius-pill: 9999px;         /* buttons, badges, segmented controls, search */
+
+  /* ── Elevation: flat by default ─────────────────────────────────── */
+  --shadow-none: none;
+  --shadow-composer: 0 0 0 1px var(--border), 0 4px 16px rgb(0 0 0 / 4%);
+  --shadow-popover: 0 0 0 1px var(--border), 0 8px 24px rgb(0 0 0 / 8%);
+  --shadow-dialog: 0 0 0 1px var(--border), 0 24px 64px rgb(0 0 0 / 16%);
+
+  /* ── Motion ─────────────────────────────────────────────────────── */
+  --duration-instant: 80ms;   /* hover, press */
+  --duration-fast: 150ms;     /* toggles, badges, disclosure */
+  --duration-normal: 220ms;   /* panels, dialogs, message entry */
+  --duration-stage: 320ms;    /* stage change: Work → Verify crossfade */
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+
+  /* ── Focus, targets, layout ─────────────────────────────────────── */
+  --focus-width: 2px;
+  --focus-offset: 2px;
+  --target-min: 2.5rem;          /* 40px buttons; icon buttons 36px with 4px hit-slop */
+  --rail-collapsed: 3.5rem;      /* 56px: 8px padding + 40px target + 8px */
+  --rail-expanded: 16.25rem;     /* 260px sidebar */
+  --layout-thread: 48rem;        /* 768px — Work thread, question runner, explain-it-back */
+  --layout-page: 65rem;          /* 1040px — Overview, Concepts, Review, Summary */
+  --layout-panel: 20rem;         /* 320px — session panel */
+  --topbar-height: 3.5rem;
+
+  --z-base: 0; --z-sticky: 20; --z-panel: 30; --z-floating: 40;
+  --z-backdrop: 50; --z-modal: 60; --z-toast: 70;
+  /* ── v0.3 "Plain": the one gradient is the resume card in the sidebar. Nothing else is tinted. ── */
+  --hero-bg:
+    radial-gradient(90% 120% at 0% 0%, #d9d1ff 0%, transparent 62%),
+    radial-gradient(80% 110% at 100% 0%, #cde5ff 0%, transparent 60%),
+    radial-gradient(70% 90% at 60% 120%, #d3f5ec 0%, transparent 60%),
+    #f6f5ff;
+  --hero-fg: #0d0d1a;
+  --hero-muted: #4b4b66;
+  --hero-chip: rgb(255 255 255 / 62%);
+  --hero-edge: rgb(109 85 245 / 14%);
+
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #0e0e0e;
+  --foreground: #ececec;
+  --card: #1b1b1b;
+  --card-foreground: var(--foreground);
+  --popover: #1b1b1b;
+  --popover-foreground: var(--foreground);
+  --primary: #ececec;              /* inverted: light pill on dark */
+  --primary-foreground: #0e0e0e;
+  --primary-hover: #d4d4d4;
+  --secondary: #212121;
+  --secondary-foreground: var(--foreground);
+  --muted: #212121;
+  --muted-foreground: #a1a1a1;
+  --accent: #2b2b2b;
+  --accent-foreground: var(--foreground);
+  --border: #2c2c2c;
+  --input: #6b6b6b;
+  --ring: #5c9bff;
+  --surface-raised: #1b1b1b;
+  --composer: #212121;
+  --link: #7aaeff;
+  --selection: #1d3866;
+  --scrim: rgb(0 0 0 / 60%);
+
+  --evidence-demonstrated: #0f2a1c;
+  --evidence-demonstrated-foreground: #6fd6a0;
+  --evidence-demonstrated-dot: #3ecf86;
+  --evidence-partial: #2c230e;
+  --evidence-partial-foreground: #f0c25a;
+  --evidence-partial-dot: #f0b232;
+  --evidence-gap: #331615;
+  --evidence-gap-foreground: #ff958b;
+  --evidence-gap-dot: #ff6a5c;
+  --evidence-unverified: #222222;
+  --evidence-unverified-foreground: #a1a1a1;
+  --evidence-unverified-dot: #7a7a7a;
+
+  --assist: #221c36;
+  --assist-foreground: #bca9ff;
+  --check: #132238;
+  --check-foreground: #8cbaff;
+
+  --destructive: #ff7b6e;
+  --destructive-foreground: #0e0e0e;
+  --destructive-surface: #331615;
+
+  --sidebar: #0e0e0e;
+
+  --shadow-composer: 0 0 0 1px var(--border);
+  --shadow-popover: 0 0 0 1px var(--border), 0 12px 32px rgb(0 0 0 / 50%);
+  --shadow-dialog: 0 0 0 1px var(--border), 0 24px 80px rgb(0 0 0 / 70%);
+  --hero-bg:
+    radial-gradient(80% 130% at 0% 0%, rgb(96 72 255 / 55%) 0%, transparent 60%),
+    radial-gradient(70% 120% at 100% 0%, rgb(30 120 255 / 45%) 0%, transparent 58%),
+    radial-gradient(60% 90% at 55% 130%, rgb(40 200 175 / 28%) 0%, transparent 60%),
+    #11122a;
+  --hero-fg: #f4f4ff;
+  --hero-muted: #b9bbe0;
+  --hero-chip: rgb(255 255 255 / 10%);
+  --hero-edge: rgb(255 255 255 / 10%);
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms;
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-stage: 0ms;
+  }
+}

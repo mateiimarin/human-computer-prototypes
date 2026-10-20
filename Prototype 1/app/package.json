@@ -1,0 +1,49 @@
+{
+  "name": "attempt-first",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "test": "vitest run",
+    "typecheck": "nuxt typecheck",
+    "test:e2e": "playwright test",
+    "format": "prettier --write app tests scripts *.ts *.json",
+    "qa:visual": "node scripts/visual-qa.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource/caveat": "^5.3.0",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@lucide/vue": "^1.59.0",
+    "@vueuse/core": "^15.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cn": "^0.5.0",
+    "katex": "^0.19.0",
+    "motion-v": "^2.8.0",
+    "nuxt": "^4.6.2",
+    "reka-ui": "^2.11.0",
+    "shadcn-nuxt": "^2.8.2",
+    "shiki": "^4.5.0",
+    "tailwind-merge": "^3.7.0",
+    "vue": "^3.5.44",
+    "vue-router": "^5.4.0",
+    "vue-sonner": "^2.0.9"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/katex": "^0.16.8",
+    "prettier": "^3.9.10",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.5",
+    "vue-tsc": "^3.3.13"
+  }
+}

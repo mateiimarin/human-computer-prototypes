@@ -1,0 +1,38 @@
+# Dependencies (at every level)
+node_modules/
+
+# Nuxt / Nitro and build caches
+.nuxt/
+.output/
+.nitro/
+.data/
+.cache/
+dist/
+*.tsbuildinfo
+
+# Local credentials; commit only placeholder environment templates
+.env
+.env.*
+!.env.example
+!.env.*.example
+.vercel/
+
+# Test reports and coverage (keep authored screenshots and design references)
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Logs
+logs/
+*.log
+
+# macOS / local editor and assistant settings
+.DS_Store
+._*
+.idea/
+.fleet/
+.claude/settings.local.json
+*.swp
+*.swo

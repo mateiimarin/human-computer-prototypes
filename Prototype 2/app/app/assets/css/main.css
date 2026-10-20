@@ -1,0 +1,110 @@
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./tailwind-theme.css";
+@import "@fontsource/geist/400.css";
+@import "@fontsource/geist/500.css";
+@import "@fontsource/geist/600.css";
+@import "@fontsource/geist/700.css";
+@import "@fontsource/geist-mono/400.css";
+@import "@fontsource/geist-mono/500.css";
+@import "katex/dist/katex.min.css";
+@import "vue-sonner/style.css";
+
+@layer base {
+  html {
+    min-width: 320px;
+    background: var(--background);
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    font-feature-settings: "ss01", "cv11";
+    min-height: 100dvh;
+  }
+  h1, h2, h3, .font-display {
+    letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
+  }
+  p { text-wrap: pretty; }
+  button:not(:disabled), [role="radio"], [role="tab"], [role="menuitem"], [role="option"], label[for], summary { cursor: pointer; }
+  :focus-visible { outline-offset: 3px; }
+  textarea, input, button { font-family: inherit; }
+  [hidden] { display: none !important; }
+}
+
+/* ── The one gradient: the resume card in the sidebar ───────── */
+.hero-field {
+  background: var(--hero-bg);
+  color: var(--hero-fg);
+  box-shadow: inset 0 0 0 1px var(--hero-edge);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Check mode: a quiet edge says "references are hidden". The banner carries the words. */
+.check-vignette::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+  box-shadow: inset 0 0 0 1px rgb(60 140 255 / 16%), inset 0 0 120px -50px rgb(47 140 255 / 14%);
+}
+
+/* ── shadcn primitives: shared interaction treatments ───────── */
+[data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"], [data-slot="sheet-overlay"] {
+  background: var(--scrim);
+  backdrop-filter: blur(6px) saturate(120%);
+  z-index: var(--z-backdrop);
+}
+[data-slot="dialog-content"], [data-slot="alert-dialog-content"] {
+  border-radius: var(--radius-panel);
+  border: 0;
+  box-shadow: var(--shadow-dialog);
+  z-index: var(--z-modal);
+  max-height: calc(100dvh - 32px);
+}
+[data-slot="sheet-content"] { z-index: var(--z-modal); box-shadow: var(--shadow-dialog); border-color: var(--border); }
+[data-slot="select-content"], [data-slot="dropdown-menu-content"], [data-slot="popover-content"] {
+  border: 0; border-radius: var(--radius-card); box-shadow: var(--shadow-popover); z-index: var(--z-floating);
+  background: var(--popover);
+}
+[data-slot="dropdown-menu-item"], [data-slot="select-item"] { border-radius: var(--radius-row); }
+[data-slot="tooltip-content"] { border-radius: 10px; font-size: 12px; }
+[data-slot="radio-group-indicator"] svg { fill: currentColor; }
+
+/* ── Motion: short, and only to show a change of state ──────── */
+.page-enter-active { transition: opacity 240ms var(--ease-out), transform 240ms var(--ease-out); }
+.page-leave-active { transition: opacity 120ms var(--ease-in); }
+.page-enter-from { opacity: 0; transform: translateY(6px); }
+.page-leave-to { opacity: 0; }
+.layout-enter-active, .layout-leave-active { transition: opacity 200ms var(--ease-out); }
+.layout-enter-from, .layout-leave-to { opacity: 0; }
+
+@keyframes rise-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes breathe { 0%, 100% { opacity: .55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.18); } }
+.animate-rise { animation: rise-in 280ms var(--ease-out) both; }
+.animate-breathe { animation: breathe 2.4s ease-in-out infinite; }
+
+/* Rendered math */
+.katex { font-size: 1.06em; }
+.katex-display { margin: .5rem 0; overflow-x: auto; overflow-y: hidden; text-align: left; }
+.katex-display > .katex { text-align: left; }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Questionnaire items slide in as they become active */
+fieldset[data-slot="questionnaire-item"][data-active] { animation: rise-in 280ms var(--ease-out) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after {
+  animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important;
+}
+html.large-text { font-size: 112.5%; }

@@ -1,0 +1,103 @@
+/* Tailwind v4 bridge for shadcn-vue. Import order in the app's main.css:
+     @import "tailwindcss";
+     @import "./tokens.css";
+     @import "./tailwind-theme.css";
+   The radius scale deliberately replaces shadcn's generated calc() radii. */
+
+@custom-variant dark (&:is(.dark, .dark *));
+
+@theme inline {
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-code);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-surface-raised: var(--surface-raised);
+  --color-composer: var(--composer);
+  --color-link: var(--link);
+  --color-selection: var(--selection);
+
+  --color-demonstrated: var(--evidence-demonstrated);
+  --color-demonstrated-foreground: var(--evidence-demonstrated-foreground);
+  --color-demonstrated-dot: var(--evidence-demonstrated-dot);
+  --color-partial: var(--evidence-partial);
+  --color-partial-foreground: var(--evidence-partial-foreground);
+  --color-partial-dot: var(--evidence-partial-dot);
+  --color-gap: var(--evidence-gap);
+  --color-gap-foreground: var(--evidence-gap-foreground);
+  --color-gap-dot: var(--evidence-gap-dot);
+  --color-unverified: var(--evidence-unverified);
+  --color-unverified-foreground: var(--evidence-unverified-foreground);
+  --color-unverified-dot: var(--evidence-unverified-dot);
+
+  --color-assist: var(--assist);
+  --color-assist-foreground: var(--assist-foreground);
+  --color-check: var(--check);
+  --color-check-foreground: var(--check-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-surface: var(--destructive-surface);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: var(--radius-tag);
+  --radius-md: var(--radius-row);
+  --radius-lg: var(--radius-field);
+  --radius-xl: var(--radius-card);
+  --radius-2xl: var(--radius-panel);
+  --radius-3xl: var(--radius-composer);
+
+  --color-hero-fg: var(--hero-fg);
+  --color-hero-muted: var(--hero-muted);
+  --color-hero-chip: var(--hero-chip);
+
+  --shadow-composer: var(--shadow-composer);
+  --shadow-popover: var(--shadow-popover);
+  --shadow-dialog: var(--shadow-dialog);
+
+  --ease-out: var(--ease-out);
+  --ease-in: var(--ease-in);
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+  }
+  ::selection { background: var(--selection); }
+  :focus-visible {
+    outline: var(--focus-width) solid var(--ring);
+    outline-offset: var(--focus-offset);
+  }
+}
