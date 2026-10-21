@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { Eraser, EllipsisVertical, FileText, SlidersHorizontal, X } from "@lucide/vue";
+import { EllipsisVertical, Info, RotateCcw, SlidersHorizontal, X } from "@lucide/vue";
 import { toast } from "vue-sonner";
 import { phases } from "~/lib/journey";
-import { agreementLabel, remainingHints } from "~/domain/session";
+import { hintsLabel, remainingHints } from "~/domain/session";
 
 const app = useApp();
 const route = useRoute();
 const id = useTaskId();
 const task = computed(() => app.task(id.value));
-const course = computed(() => (task.value ? app.course(task.value.courseId) : undefined));
 const s = useSession();
 const assist = useAssistDialog();
-const discardOpen = ref(false);
+const intro = useIntro();
+const restartOpen = ref(false);
 
 const current = computed(() => Math.max(0, phases.findIndex((p) => route.path.endsWith(`/${p.id}`))));
 const reach = computed(() => {
@@ -23,15 +23,14 @@ function href(i: number) {
 }
 // Assistance only matters while working; review and reflection don't offer help to change
 const showAgreement = computed(() => s.value?.started && current.value === 1);
+// The one place that shows how many hints are left
 const agreement = computed(() =>
-  s.value
-    ? `${agreementLabel(s.value.mode, s.value.budget)}${s.value.mode === "hints" ? ` · ${remainingHints(s.value)} left` : ""}`
-    : "",
+  !s.value ? "" : s.value.budget === 0 ? hintsLabel(0) : `${remainingHints(s.value)} of ${hintsLabel(s.value.budget)} left`,
 );
-function discard() {
-  app.discardSession(id.value);
-  discardOpen.value = false;
-  toast.success("Session discarded");
+function startOver() {
+  app.startOver(id.value);
+  restartOpen.value = false;
+  toast.success("Exercise reset");
   navigateTo(`/task/${id.value}`);
 }
 </script>
@@ -42,13 +41,13 @@ function discard() {
       <div class="mx-auto flex h-[72px] w-full max-w-[1480px] items-center gap-3 px-4 sm:px-6">
         <UiTooltip>
           <UiTooltipTrigger as-child>
-            <UiButton variant="secondary" size="icon" class="bg-card shadow-sm" aria-label="Leave session. Your work is kept." @click="navigateTo(`/task/${id}`)"><X /></UiButton>
+            <UiButton variant="secondary" size="icon" class="bg-card shadow-sm" aria-label="Leave this exercise. Your work is kept." @click="navigateTo('/')"><X /></UiButton>
           </UiTooltipTrigger>
           <UiTooltipContent>Leave. Your work is kept.</UiTooltipContent>
         </UiTooltip>
         <div class="hidden min-w-0 lg:block">
-          <p class="text-muted-foreground truncate text-xs font-semibold">{{ course?.name }}</p>
-          <p class="font-display truncate text-[15px] leading-tight font-bold">Task {{ task?.number }} · {{ task?.title }}</p>
+          <p class="text-muted-foreground truncate text-xs font-semibold">{{ task?.course }}</p>
+          <p class="font-display truncate text-[15px] leading-tight font-bold">{{ task?.title }}</p>
         </div>
 
         <nav aria-label="Session progress" class="mx-auto hidden md:block">
@@ -77,10 +76,10 @@ function discard() {
             <button
               v-if="showAgreement"
               class="bg-card hover:bg-card hidden h-11 items-center gap-2.5 rounded-full px-4 text-sm font-semibold shadow-sm transition-shadow hover:shadow-md lg:flex"
-              :aria-label="`Assistance: ${agreement}. Change assistance.`"
+              :aria-label="`Hints: ${agreement}. Change hints.`"
               @click="assist.open.value = true"
             >
-              <SlidersHorizontal class="text-iris size-4" /> {{ agreement }}
+              <SlidersHorizontal class="text-iris size-4" /> {{ agreement }} <span class="text-muted-foreground font-medium">· Change</span>
             </button>
           </Transition>
           <UiDropdownMenu>
@@ -88,10 +87,10 @@ function discard() {
               <UiButton variant="secondary" size="icon" class="bg-card shadow-sm" aria-label="Session menu"><EllipsisVertical /></UiButton>
             </UiDropdownMenuTrigger>
             <UiDropdownMenuContent align="end" class="w-56 rounded-2xl p-1.5">
-              <UiDropdownMenuItem class="rounded-xl py-2.5" @select="navigateTo(`/task/${id}`)"><FileText /> Task details</UiDropdownMenuItem>
-              <UiDropdownMenuItem v-if="showAgreement" class="rounded-xl py-2.5 lg:hidden" @select="assist.open.value = true"><SlidersHorizontal /> Change assistance</UiDropdownMenuItem>
+              <UiDropdownMenuItem v-if="showAgreement" class="rounded-xl py-2.5 lg:hidden" @select="assist.open.value = true"><SlidersHorizontal /> Change hints</UiDropdownMenuItem>
+              <UiDropdownMenuItem class="rounded-xl py-2.5" @select="intro.open.value = true"><Info /> About this prototype</UiDropdownMenuItem>
               <UiDropdownMenuSeparator />
-              <UiDropdownMenuItem variant="destructive" class="rounded-xl py-2.5" @select="discardOpen = true"><Eraser /> Discard session</UiDropdownMenuItem>
+              <UiDropdownMenuItem variant="destructive" class="rounded-xl py-2.5" @select="restartOpen = true"><RotateCcw /> Start over</UiDropdownMenuItem>
             </UiDropdownMenuContent>
           </UiDropdownMenu>
         </div>
@@ -102,15 +101,15 @@ function discard() {
 
     <AssistanceDialog v-if="s" />
 
-    <UiAlertDialog v-model:open="discardOpen">
+    <UiAlertDialog v-model:open="restartOpen">
       <UiAlertDialogContent>
         <UiAlertDialogHeader>
-          <UiAlertDialogTitle>Discard this session?</UiAlertDialogTitle>
-          <UiAlertDialogDescription>Your attempt, hints, tutor conversation and reviews for this task are removed. This can't be undone.</UiAlertDialogDescription>
+          <UiAlertDialogTitle>Start this exercise over?</UiAlertDialogTitle>
+          <UiAlertDialogDescription>This removes your attempt, hints, tutor conversation and reviews for this exercise.</UiAlertDialogDescription>
         </UiAlertDialogHeader>
         <UiAlertDialogFooter>
           <UiAlertDialogCancel>Stay</UiAlertDialogCancel>
-          <UiAlertDialogAction class="bg-destructive hover:bg-destructive/90 text-white" @click="discard">Discard session</UiAlertDialogAction>
+          <UiAlertDialogAction class="bg-destructive hover:bg-destructive/90 text-white" @click="startOver">Start over</UiAlertDialogAction>
         </UiAlertDialogFooter>
       </UiAlertDialogContent>
     </UiAlertDialog>

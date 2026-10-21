@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ArrowLeft, ArrowRight, Check, Info, Lock, MessageCircleQuestion, Sprout, Waypoints } from "@lucide/vue";
-import type { Mode, StartApproach } from "~/data/types";
-import { agreementLabel } from "~/domain/session";
+import { ArrowRight, Info, Lock, MessageCircleQuestion, Sprout, Waypoints } from "@lucide/vue";
+import type { StartApproach } from "~/data/types";
+import { defaults, MAX_HINTS } from "~/data/exercises";
+import { hintsLabel } from "~/domain/session";
 import { phasePath } from "~/lib/journey";
 
 definePageMeta({ layout: "session" });
@@ -12,179 +13,151 @@ const task = computed(() => app.task(id.value)!);
 const assist = useAssistDialog();
 useHead({ title: computed(() => `Set up · ${task.value.title}`) });
 
-const help = ref<Mode>(s.value.mode);
-const starter = ref<"offer" | "wait">(s.value.starterGuidance ? "offer" : "wait");
-const start = ref<StartApproach>(s.value.start);
-const item = ref("help");
-const stage = ref<"quiz" | "summary">(s.value.started ? "summary" : "quiz");
-const defs = [
-  { name: "help", choices: [{ value: "questions" }, { value: "hints" }] },
-  { name: "starter", choices: [{ value: "offer" }, { value: "wait" }] },
-  { name: "start", choices: [{ value: "blank" }, { value: "scaffold" }] },
-];
-const current = computed(() => defs.findIndex((d) => d.name === item.value) + 1);
-const conflict = computed(() => help.value === "questions" && start.value === "scaffold");
+const answers = reactive<{ hints: number; starter: string; start: string }>({
+  hints: s.value.started ? s.value.budget : defaults.budget,
+  starter: s.value.starterGuidance ? "offer" : "wait",
+  start: s.value.start,
+});
+const hintsModel = computed({
+  get: () => [answers.hints],
+  set: (v: number[] | undefined) => (answers.hints = v?.[0] ?? 0),
+});
+const conflict = computed(() => answers.hints === 0 && answers.start === "scaffold");
 
-const agreement = computed(() => {
-  const live = s.value.started;
-  const mode = live ? s.value.mode : help.value;
-  return {
-    mode,
-    lines: [
-      {
-        icon: Sprout,
-        title: (live ? s.value.start : start.value) === "scaffold" ? "You'll start with a scaffold" : "You'll start on a blank page",
-        text:
-          (live ? s.value.start : start.value) === "scaffold"
-            ? "Each step comes with a short prompt to write against."
-            : "Your own first step comes before any help.",
-      },
-      {
-        icon: MessageCircleQuestion,
-        title: mode === "questions" ? "Questions only" : `Questions and up to ${live ? s.value.budget : 3} hints`,
-        text: mode === "questions" ? "The tutor asks questions that point to your next step." : "One hint at a time, each after some thinking of your own.",
-      },
-      {
-        icon: Lock,
-        title: "Final answers stay hidden",
-        text: "That holds whichever help you choose. You can change it later, deliberately.",
-      },
+const questions = [
+  {
+    key: "starter",
+    title: "When you don't know how to start",
+    options: [
+      { value: "offer", label: "Show me a starter question", text: "The tutor opens with one question." },
+      { value: "wait", label: "Wait until I ask", text: "The tutor stays closed until you open it." },
     ],
-  };
+  },
+  {
+    key: "start",
+    title: "How do you want to begin?",
+    options: [
+      { value: "blank", label: "A blank page", text: "You write step 1 yourself." },
+      { value: "scaffold", label: "Guided steps", text: "Each step has a short prompt to write against." },
+    ],
+  },
+] as const;
+
+// Before the first start this follows the choices live; afterwards it shows what was applied.
+const summary = computed(() => {
+  const live = s.value.started;
+  const hints = live ? s.value.budget : answers.hints;
+  const scaffold = (live ? s.value.start : answers.start) === "scaffold";
+  return [
+    {
+      icon: MessageCircleQuestion,
+      title: hints === 0 ? "No hints" : `Up to ${hintsLabel(hints)}`,
+      text: hints === 0 ? "The tutor only asks questions." : "You get one hint at a time. Before each hint you answer two short questions. The tutor can also ask you questions.",
+    },
+    {
+      icon: Sprout,
+      title: scaffold ? "Guided steps" : "A blank page",
+      text: scaffold ? "Each step has a short prompt to write against." : "You write step 1 yourself.",
+    },
+    { icon: Lock, title: "No full answers", text: "The tutor never gives the full solution, whatever you choose. You can change the number of hints later." },
+  ];
 });
 
 function fixWithStarter() {
-  start.value = "blank";
-  starter.value = "offer";
+  answers.start = "blank";
+  answers.starter = "offer";
 }
 function begin() {
   if (!s.value.started) {
-    s.value.mode = help.value;
-    s.value.budget = 3;
-    s.value.start = start.value;
-    s.value.starterGuidance = starter.value === "offer";
+    s.value.budget = answers.hints;
+    s.value.start = answers.start as StartApproach;
+    s.value.starterGuidance = answers.starter === "offer";
     s.value.started = true;
-    if (start.value === "blank" && starter.value === "offer" && app.content(id.value))
-      s.value.exchanges.push({ question: "", reply: app.content(id.value)!.starterQuestion, step: 0 });
+    if (answers.start === "blank" && answers.starter === "offer" && app.content(id.value)) {
+      const q = app.content(id.value)!.starterQuestion;
+      s.value.exchanges.push({ question: "", reply: q, step: 0 });
+      s.value.chat.push({ role: "tutor", kind: "question", text: q, step: 0 });
+    }
   }
   s.value.phase = "work";
   navigateTo(phasePath(id.value, "work"));
 }
-const choiceClass =
-  "rounded-3xl border-2 border-transparent bg-card px-5 py-5 text-base shadow-sm hover:bg-card hover:border-foreground/25 data-checked:border-foreground data-checked:bg-card data-checked:shadow-md";
 </script>
 
 <template>
-  <div class="relative min-h-[calc(100dvh-72px)] overflow-hidden">
-    <div class="pointer-events-none absolute -top-40 -right-32 size-[480px] rounded-full opacity-60 blur-3xl" style="background: var(--lilac)" />
-    <div class="pointer-events-none absolute -bottom-52 -left-40 size-[480px] rounded-full opacity-45 blur-3xl" style="background: var(--sun)" />
+  <div class="mx-auto w-full max-w-[680px] px-5 pt-8 pb-24 sm:pt-14">
+    <header class="space-y-3">
+      <p class="text-muted-foreground text-sm font-semibold">{{ task.title }}</p>
+      <h1 class="font-display text-[2.2rem] leading-[1.05] font-bold text-balance sm:text-5xl">{{ s.started ? "Help settings" : "How the tutor helps" }}</h1>
+      <p class="text-muted-foreground text-lg">
+        {{ s.started ? "These apply to this exercise only." : "Choose how you want help on this exercise. There are no right or wrong choices." }}
+      </p>
+    </header>
 
-    <div class="relative mx-auto w-full max-w-[680px] px-5 pt-8 pb-24 sm:pt-16">
-      <Transition mode="out-in" enter-active-class="transition duration-400 ease-out" enter-from-class="translate-y-5 opacity-0" leave-active-class="transition duration-200 ease-in" leave-to-class="-translate-y-3 opacity-0">
-        <!-- QUIZ -->
-        <div v-if="stage === 'quiz'" key="quiz">
-          <UiQuestionnaire v-model:item="item" :items="defs" shortcuts="numbers" class="gap-9" @submit.prevent="stage = 'summary'">
-            <div class="space-y-3">
-              <p class="text-muted-foreground text-sm font-semibold">Before you start · {{ current }} of 3</p>
-              <div class="flex gap-1.5" aria-hidden="true">
-                <span v-for="i in 3" :key="i" class="bg-foreground/12 relative h-1.5 flex-1 overflow-hidden rounded-full">
-                  <span class="bg-foreground absolute inset-y-0 left-0 rounded-full transition-all duration-500" :style="{ width: i <= current ? '100%' : '0%' }" />
-                </span>
-              </div>
-            </div>
-
-            <UiQuestionnaireItem name="help" class="gap-7">
-              <div class="space-y-7">
-                <UiQuestionnaireTitle class="font-display text-[2.2rem] leading-[1.05] font-bold text-balance sm:text-5xl">How should the tutor help you with this task?</UiQuestionnaireTitle>
-                <UiQuestionnaireChoices>
-                  <UiQuestionnaireChoice value="questions" :checked="help === 'questions'" :class="choiceClass" @update:checked="(v: boolean) => v && (help = 'questions')">
-                    <span class="font-display text-xl font-bold">Questions only</span>
-                    <UiQuestionnaireChoiceDescription class="text-[15px]">The tutor asks, you work it out. Hints stay off.</UiQuestionnaireChoiceDescription>
-                  </UiQuestionnaireChoice>
-                  <UiQuestionnaireChoice value="hints" :checked="help === 'hints'" :class="choiceClass" @update:checked="(v: boolean) => v && (help = 'hints')">
-                    <span class="font-display text-xl font-bold">Questions and hints</span>
-                    <UiQuestionnaireChoiceDescription class="text-[15px]">Up to 3 small hints, one at a time, each after you add some thinking.</UiQuestionnaireChoiceDescription>
-                  </UiQuestionnaireChoice>
-                </UiQuestionnaireChoices>
-                <p class="text-muted-foreground text-sm">There's no right answer. This describes the help you want, not how well you're doing.</p>
-              </div>
-            </UiQuestionnaireItem>
-
-            <UiQuestionnaireItem name="starter" class="gap-7">
-              <div class="space-y-7">
-                <UiQuestionnaireTitle class="font-display text-[2.2rem] leading-[1.05] font-bold text-balance sm:text-5xl">If you freeze at the very start, what should happen?</UiQuestionnaireTitle>
-                <UiQuestionnaireChoices>
-                  <UiQuestionnaireChoice value="offer" :checked="starter === 'offer'" :class="choiceClass" @update:checked="(v: boolean) => v && (starter = 'offer')">
-                    <span class="font-display text-xl font-bold">Offer me a starter question</span>
-                    <UiQuestionnaireChoiceDescription class="text-[15px]">A gentle first question waits in the tutor panel. Your page stays empty.</UiQuestionnaireChoiceDescription>
-                  </UiQuestionnaireChoice>
-                  <UiQuestionnaireChoice value="wait" :checked="starter === 'wait'" :class="choiceClass" @update:checked="(v: boolean) => v && (starter = 'wait')">
-                    <span class="font-display text-xl font-bold">Wait until I ask</span>
-                    <UiQuestionnaireChoiceDescription class="text-[15px]">Nothing appears unless I open the tutor myself.</UiQuestionnaireChoiceDescription>
-                  </UiQuestionnaireChoice>
-                </UiQuestionnaireChoices>
-              </div>
-            </UiQuestionnaireItem>
-
-            <UiQuestionnaireItem name="start" class="gap-7">
-              <div class="space-y-7">
-                <UiQuestionnaireTitle class="font-display text-[2.2rem] leading-[1.05] font-bold text-balance sm:text-5xl">How do you want to begin?</UiQuestionnaireTitle>
-                <UiQuestionnaireChoices>
-                  <UiQuestionnaireChoice value="blank" :checked="start === 'blank'" :class="choiceClass" @update:checked="(v: boolean) => v && (start = 'blank')">
-                    <span class="font-display text-xl font-bold">A blank page</span>
-                    <UiQuestionnaireChoiceDescription class="text-[15px]">Begin with your own first step.</UiQuestionnaireChoiceDescription>
-                  </UiQuestionnaireChoice>
-                  <UiQuestionnaireChoice value="scaffold" :checked="start === 'scaffold'" :class="choiceClass" @update:checked="(v: boolean) => v && (start = 'scaffold')">
-                    <span class="font-display text-xl font-bold">A guided scaffold</span>
-                    <UiQuestionnaireChoiceDescription class="text-[15px]">Each step comes with a short prompt to write against.</UiQuestionnaireChoiceDescription>
-                  </UiQuestionnaireChoice>
-                </UiQuestionnaireChoices>
-
-                <UiAlert v-if="conflict" class="bg-guidance text-guidance-foreground rounded-3xl border-0 p-5">
-                  <Info />
-                  <UiAlertTitle class="font-display text-lg font-bold">A scaffold needs hints</UiAlertTitle>
-                  <UiAlertDescription class="text-guidance-foreground/90">
-                    <p>You chose questions only, so hints are off. Pick one to continue.</p>
-                    <div class="mt-4 flex flex-wrap gap-2">
-                      <UiButton type="button" size="sm" variant="dark" @click="fixWithStarter">Use a starter question instead</UiButton>
-                      <UiButton type="button" size="sm" variant="outline" @click="help = 'hints'">Allow hints</UiButton>
-                    </div>
-                  </UiAlertDescription>
-                </UiAlert>
-              </div>
-            </UiQuestionnaireItem>
-
-            <UiQuestionnaireActions class="grid-cols-[auto_1fr_auto] gap-3">
-              <UiQuestionnairePrevious size="lg" variant="ghost" class="col-start-1 justify-self-start"><ArrowLeft /> Back</UiQuestionnairePrevious>
-              <UiQuestionnaireNext size="lg" class="col-start-3">Continue <ArrowRight /></UiQuestionnaireNext>
-              <UiQuestionnaireSubmit size="lg" class="col-start-3" :disabled="conflict">See my agreement <ArrowRight /></UiQuestionnaireSubmit>
-            </UiQuestionnaireActions>
-          </UiQuestionnaire>
-        </div>
-
-        <!-- SUMMARY -->
-        <div v-else key="summary">
-          <p class="text-muted-foreground mb-3 text-sm font-semibold">Task {{ task.number }} · {{ task.title }}</p>
-          <h1 class="font-display text-[2.2rem] leading-[1.05] font-bold text-balance sm:text-5xl">{{ s.started ? "Your agreement for this task" : "Here's your agreement" }}</h1>
-          <p class="text-muted-foreground mt-3 text-lg">{{ s.started ? "It applies to this task only. Anything you change here is deliberate." : "It applies to this task only. You can change it while you work." }}</p>
-          <ul class="mt-9 space-y-6">
-            <li v-for="(line, i) in agreement.lines" :key="line.title">
-              <Reveal :index="i" :delay="0.1" class="flex items-start gap-4">
-                <span class="bg-primary grid size-11 shrink-0 place-items-center rounded-2xl"><component :is="line.icon" class="size-5" /></span>
-                <span>
-                  <span class="font-display block text-xl font-bold">{{ line.title }}</span>
-                  <span class="text-muted-foreground block text-[16px] leading-snug">{{ line.text }}</span>
-                </span>
-              </Reveal>
-            </li>
-          </ul>
-          <div class="mt-10 flex flex-wrap items-center gap-3">
-            <UiButton v-if="!s.started" variant="ghost" size="lg" @click="stage = 'quiz'"><ArrowLeft /> Edit answers</UiButton>
-            <UiButton v-else variant="outline" size="lg" @click="assist.open.value = true"><Waypoints /> Change assistance</UiButton>
-            <UiButton size="xl" @click="begin">{{ s.started ? "Back to my attempt" : "Start working" }} <ArrowRight /></UiButton>
+    <!-- Questions (before the first start) -->
+    <div v-if="!s.started" class="mt-10 space-y-9">
+      <fieldset class="space-y-3">
+        <legend class="font-display text-xl font-bold">1. How many hints do you want?</legend>
+        <div class="space-y-3 rounded-2xl border-2 border-foreground/10 p-5">
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="font-display text-3xl font-bold" aria-live="polite">{{ hintsLabel(answers.hints) }}</span>
+                      </div>
+          <UiSlider v-model="hintsModel" :min="0" :max="MAX_HINTS" :step="1" label="Number of hints" class="py-2" />
+          <div class="text-muted-foreground flex justify-between text-sm font-semibold" aria-hidden="true">
+            <span v-for="n in MAX_HINTS + 1" :key="n">{{ n - 1 }}</span>
           </div>
         </div>
-      </Transition>
+      </fieldset>
+
+      <fieldset v-for="(q, qi) in questions" :key="q.key" class="space-y-3">
+        <legend class="font-display text-xl font-bold">{{ qi + 2 }}. {{ q.title }}</legend>
+        <UiRadioGroup v-model="answers[q.key]" class="gap-3" :aria-label="q.title">
+          <label
+            v-for="o in q.options"
+            :key="o.value"
+            :for="`${q.key}-${o.value}`"
+            class="border-foreground/10 hover:border-foreground/30 has-[[data-state=checked]]:border-foreground has-[[data-state=checked]]:bg-card flex cursor-pointer items-start gap-4 rounded-2xl border-2 p-4 transition-all"
+          >
+            <UiRadioGroupItem :id="`${q.key}-${o.value}`" :value="o.value" class="mt-1" />
+            <span>
+              <span class="font-display block text-lg font-bold">{{ o.label }}</span>
+              <span class="text-muted-foreground block text-[15px] leading-snug">{{ o.text }}</span>
+            </span>
+          </label>
+        </UiRadioGroup>
+
+        <UiAlert v-if="q.key === 'start' && conflict" class="bg-guidance text-guidance-foreground rounded-3xl border-0 p-5">
+          <Info />
+          <UiAlertTitle class="font-display text-lg font-bold">Guided steps need hints</UiAlertTitle>
+          <UiAlertDescription class="text-guidance-foreground/90">
+            <p>You chose no hints, but guided steps use them. Change one of the two:</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <UiButton type="button" size="sm" variant="dark" @click="fixWithStarter">Use a blank page instead</UiButton>
+              <UiButton type="button" size="sm" variant="outline" @click="answers.hints = defaults.budget">Allow {{ defaults.budget }} hints</UiButton>
+            </div>
+          </UiAlertDescription>
+        </UiAlert>
+      </fieldset>
+    </div>
+
+    <!-- What it means -->
+    <section class="mt-10 border-t pt-8" aria-labelledby="summary">
+      <h2 id="summary" class="font-display text-2xl font-bold">What this means</h2>
+      <ul class="mt-5 space-y-5">
+        <li v-for="line in summary" :key="line.title" class="flex items-start gap-4">
+          <span class="bg-primary grid size-10 shrink-0 place-items-center rounded-2xl"><component :is="line.icon" class="size-5" /></span>
+          <span>
+            <span class="font-display block text-lg font-bold">{{ line.title }}</span>
+            <span class="text-muted-foreground block text-[15px] leading-snug">{{ line.text }}</span>
+          </span>
+        </li>
+      </ul>
+    </section>
+
+    <div class="mt-10 flex flex-wrap items-center justify-between gap-3">
+      <UiButton v-if="s.started" variant="outline" size="lg" @click="assist.open.value = true"><Waypoints /> Change hints</UiButton>
+      <span v-else />
+      <UiButton size="xl" :disabled="conflict" @click="begin">{{ s.started ? "Back to my attempt" : "Start working" }} <ArrowRight /></UiButton>
     </div>
   </div>
 </template>

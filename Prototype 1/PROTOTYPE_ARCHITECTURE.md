@@ -1,6 +1,6 @@
 # Prototype 1: Attempt-first tutor
 
-**Milestone:** Lo-Fi prototype · **Status:** Architecture draft · **Updated:** 19 October 2026
+**Milestone:** Lo-Fi prototype · **Status:** Architecture draft · **Updated:** 20 October 2026
 
 We are building a prototype web app for a Human Computer Interaction course. The goal is a visually polished, interactive demo that demonstrates thoughtful human-computer interaction and UI/UX best practices through clear flows, a clean interface, accessible components, and smooth, purposeful transitions. Use Nuxt and shadcn/vue to deliver a cohesive frontend experience, with scripted content and temporary UI state wherever interaction is needed. Agents working on this prototype should prioritize the quality of the demonstrated experience and keep scope focused on these flows, without building real product functionality or unnecessary features.
 
@@ -327,9 +327,9 @@ Add prototype-specific rules here as the team develops the concept. Keep confirm
 The brief changed from "demonstrate the core journey" to "look and behave like the real product, minus the real services". These entries record what that changes. The core journey, F1–F7 and G01–G14 still hold.
 
 - **G18 · Product framing:** the app presents itself as a finished product. No "demo", "prototype" or "scripted" labels appear in the student journey. · all screens · Confirmed
-- **G19 · Supporting destinations:** destinations beyond the five journey screens now exist because a real product needs them: sign-in and onboarding, Today, Library (courses, sheets, add-sheet flow), History, Settings, and a command palette. They never gate or interrupt the journey. · Section 4 · Confirmed (replaces the statement that marketing, account, dashboard and settings destinations are unnecessary)
-- **G20 · Standing defaults:** onboarding and Settings set default assistance for new tasks (N3). Each task still confirms its own agreement in setup, and the agreement stays per task. · F1, session setup · Confirmed
-- **G21 · Per-task sessions persist:** leaving a task keeps its attempt, hints and tutor exchanges. They are removed only through an explicit "Discard session". Finishing archives the session to History, from where the task can be reopened. · F1, G11, Section 8 · Proposed (replaces "starting another task discards the current one")
+- **G19 · Supporting destinations:** destinations beyond the five journey screens now exist because a real product needs them: sign-in and onboarding, Today, Library (courses, sheets, add-sheet flow), History, Settings, and a command palette. They never gate or interrupt the journey. · Section 4 · **Replaced by G35** (the statement in Section 4 that these destinations are unnecessary applies again)
+- **G20 · Standing defaults:** onboarding and Settings set default assistance for new tasks (N3). Each task still confirms its own agreement in setup, and the agreement stays per task. · F1, session setup · **Replaced by G37** (there is no Settings screen; new sessions start from fixed defaults)
+- **G21 · Per-task sessions persist:** leaving a task keeps its attempt, hints and tutor exchanges. They are removed only through an explicit "Discard session". Finishing archives the session to History, from where the task can be reopened. · F1, G11, Section 8 · **Replaced by G37**
 - **G22 · Simulated services stay simulated:** uploads, handwriting reading, task detection, tutor replies, feedback and attribution use fixtures, and the review outcome is chosen from the command palette, not inferred from input. Feedback wording describes the submitted steps and never claims to grade or measure understanding. · G05, F5 · Confirmed (relaxes G15's on-screen labelling at the brief's request, keeps its honesty about what feedback means)
 - **G23 · Accessible motion:** richer motion is allowed (staggered entrances, spring layout pills, labelled waits). It is removed with the OS reduced-motion setting or Settings → Appearance, and never carries state on its own. · G06, Section 8 · Confirmed
 - **G24 · Sparing use of cards:** lists, timelines and rows with dividers are preferred. Raised surfaces are kept for the writing sheet and a few focused panels. · design · Confirmed
@@ -349,9 +349,32 @@ The workspace, review and reflection were re-checked against F2, F5–F7 and N1�
 - **G33 · Every contribution leads back:** from the reflection, steps open in the attempt and hints and tutor questions open the tutor panel. · F7 · Confirmed
 - **G34 · Scaffold start opens the ladder:** choosing a scaffold with hints on opens the tutor panel on arrival, so the gated hint ladder is where the student lands. · F1, F3 · Confirmed
 
+### Rules added when the prototype was simplified for reviewers (20 October 2026)
+
+The app had grown into an end-to-end product, and reviewers struggled to tell what was what. Every element was checked against two questions: is it part of the core journey (F1–F7), and does a reviewer need it to judge whether the flow meets N1–N5? What did not pass was removed. The element-by-element audit is in `app/docs/SIMPLIFICATION.md`.
+
+- **G35 · Journey screens only:** the app has one entry screen and the five journey screens (task, set-up, work, review, reflect). Sign-in, onboarding, Today, Library, add-sheet, History, Settings, account menu, sidebar and tab bar are removed. · Section 4, G19 · Confirmed (replaces G19)
+- **G36 · One entry screen:** "Exercises" is a flat list of the four scripted exercises with the subject under each title. No sheets, courses, deadlines, progress bars, thumbnails or filters. Each row says what it does: *Start*, *Continue* or *View reflection*. · F1 · Confirmed
+- **G37 · Per-exercise sessions, no history:** assistance is chosen in each exercise's set-up from fixed defaults (questions only, 3 hints, blank start, starter question on). A session persists while the student leaves and returns. *Start over* (session menu, with a confirmation) removes it. *Finish* keeps it, marks the exercise finished and returns to the list, where it can be viewed or reopened. · F1, G11, Section 8 · Confirmed (replaces G20 and G21)
+- **G38 · Set-up is one screen:** the three preference questions sit on one page with a summary of what they mean that updates as the student chooses. The scaffold-without-hints conflict is still explained and has to be resolved. · F1 · Confirmed
+- **G39 · Plain labels:** screens and controls are named for what they are. The interface says "exercise", the code and routes keep "task". No greetings, eyebrows, decorative artwork, tips or marketing copy. · G16, G24 · Confirmed
+- **G40 · Reflection without extras:** no filter and no collapsible legend. Each count carries a one-line meaning; every entry still links back and can be corrected (G32, G33). The "doesn't measure understanding" sentence stays (G25). Finishing is one action. · F7 · Confirmed
+- **G41 · ⌘K is a facilitator tool:** it jumps to an exercise and chooses the next review outcome (A gap, then resolved · The same gap twice · No issues found). It has no visible entry point in the student journey. · Section 10, G22 · Confirmed
+- **G42 · Removal stays removed:** a feature returns only when it has a flow in F1–F7 or an extension attachment point in Section 3. · G14 · Confirmed
+
+### Rules added after the first reviewer feedback (21 October 2026)
+
+- **G43 · Hints are one number:** the "questions only / questions and hints" modes are gone. The student picks 0–5 hints with a slider in set-up and can change it later. At 0 the tutor only asks questions. More hints still needs the short pause, fewer applies at once, and hints already used are never taken back. Guided steps with 0 hints is still a conflict to resolve. · F1, F3, F4, G10 · Confirmed (replaces the two-mode choice and the 3/5 toggle)
+- **G44 · Nothing is stored:** state lives in memory only, so a page refresh starts the whole prototype again. *Start over* still resets one exercise. · G11, G21 · Confirmed (replaces `localStorage` persistence)
+- **G45 · Test chips on open-ended inputs:** every input that expects the student's own writing (attempt steps, tutor question, hint questions, explanation) shows a dashed **Test · Fill sample** chip on its top edge while it is focused. It fills that input with prepared text; the first review gets the attempt with the mistake, later ones the corrected one. It is for reviewers and is labelled as such. · F2, F3, F6, G22 · Confirmed
+- **G46 · No photo upload:** the handwritten-work upload and its simulated reading are removed; the attempt is typed (or filled with a test chip). · F2, Section 2 · Confirmed (the architecture lists a sample upload as optional)
+- **G47 · Plain wording:** no taglines or reassurance lines. Text says what a thing is or does, and labels use the words the student sees elsewhere: *problem* / *open issue* instead of "gap", *You wrote / Tutor asked / Tutor gave a hint* instead of "introduced / prompted / supplied", *Still open* instead of "Points to revisit". Where a name needs explaining ("Who thought it?"), one plain sentence under it does. · G16, G39 · Confirmed
+
+- **G48 · About dialog:** every page load opens a short "About this prototype" dialog, reopenable from "About this prototype" (list header, session menu). It says in three bullets that no AI is connected and replies and feedback are prepared and may not fit the input, shows the test chip, and lists the needs the prototype addresses and how: N1 friction (question first, two short answers per hint, wait before more hints), N2 who thought it (trace how the exercise went and who did what, with correctable labels), N3 own attempt first (blank start, help optional, tutor sends you back to the step), N4 staged hints without full answers (0–5 hints, one at a time). N5 (post-interaction verification and optional self-testing) is not claimed: the optional quiz is not in this prototype. Need names follow the needfinding report. · Section 1, G15, G22, G45 · Confirmed
+
 ### Adding future rules
 
-Append new entries using **ID · rule · affected flow/module · status**. Use `Confirmed`, `Proposed`, or `Replaced` as the status. If a rule changes a flow, update that flow in the same revision. Continue numbering from G35; retain earlier entries or identify the rule they replace so the team can follow changes.
+Append new entries using **ID · rule · affected flow/module · status**. Use `Confirmed`, `Proposed`, or `Replaced` as the status. If a rule changes a flow, update that flow in the same revision. Continue numbering from G49; retain earlier entries or identify the rule they replace so the team can follow changes.
 
 ## 10. Prototype walkthroughs
 

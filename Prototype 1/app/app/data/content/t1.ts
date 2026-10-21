@@ -5,7 +5,6 @@ export const t1: TaskContent = {
   statement:
     "Use induction to show that $T(n)=n^2$ for all integers $n\\geq1$, where",
   givens: ["$T(1)=1$", "$T(n)=T(n-1)+2n-1$ for $n\\geq2$"],
-  reminder: "Keep the case you assume separate from the case you need to establish.",
   steps: [
     {
       label: "Base case",
@@ -30,6 +29,11 @@ export const t1: TaskContent = {
     "Which part of your expression can use the induction hypothesis?",
     "Compare your expanded expression with the claim for the next integer.",
   ],
+  sampleAnswers: {
+    plan: "I'll check n = 1 first, then see how the recurrence links one term to the next.",
+    recall: "I assume T(k) = k² for one fixed k ≥ 1.",
+    explanation: "My hypothesis says T(k+1) = (k+1)², but that is the case I still have to prove. I can only assume the claim for k, not for k+1.",
+  },
   gateQuestion: "Without rereading, what does your hypothesis assume?",
   starterQuestion: "What is the smallest value of n you need to check?",
   tutor: {
@@ -95,7 +99,7 @@ export const t1: TaskContent = {
     revisit: "Induction hypothesis: separating the assumed case from the case to prove",
   },
   repeatNote:
-    "This is the same gap as in your last review. Your explanation from attempt 1 is below.",
+    "This is the same problem as in your last review. Your earlier explanation is below.",
   supported: [
     "Checked for the smallest allowed value, n = 1.",
     "Assumes the claim for a fixed k, not for k + 1.",

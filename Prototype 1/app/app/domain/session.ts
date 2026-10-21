@@ -1,20 +1,20 @@
 import type {
   Blocks,
+  ChatMessage,
   Contribution,
-  Mode,
+  Defaults,
   Review,
   Scenario,
   Session,
-  Settings,
   TaskContent,
 } from "~/data/types";
 
 export const originLabels = {
-  you: "You introduced",
-  prompted: "Tutor prompted",
-  supplied: "Tutor supplied",
-  setting: "Your choice",
-  mixed: "A mix of both",
+  you: "You wrote",
+  prompted: "Tutor asked",
+  supplied: "Tutor gave a hint",
+  setting: "Your change",
+  mixed: "Mixed",
   unclear: "Not sure",
 } as const;
 
@@ -47,13 +47,12 @@ export const scenarioLabels: Record<Scenario, string> = {
   clear: "No issues found",
 };
 
-export function createSession(taskId: string, defaults?: Settings): Session {
+export function createSession(taskId: string, defaults?: Defaults): Session {
   return {
     taskId,
     phase: "setup",
     started: false,
     startedAt: new Date().toISOString(),
-    mode: defaults?.mode ?? "questions",
     budget: defaults?.budget ?? 3,
     start: defaults?.start ?? "blank",
     starterGuidance: defaults?.starterGuidance ?? true,
@@ -62,16 +61,14 @@ export function createSession(taskId: string, defaults?: Settings): Session {
     gate: "hint",
     gateResponses: [],
     exchanges: [],
+    chat: [],
     policyHistory: [],
     reviews: [],
     scenario: "issue",
-    attachment: false,
     flags: {},
     focusStep: null,
     openTutor: false,
-    aboutDraft: null,
     tutorDraft: "",
-    gateDraft: "",
     explainDraft: "",
     seenReview: 0,
     finishedAt: null,
@@ -86,24 +83,21 @@ export function remainingHints(s: Session) {
   return Math.max(0, s.budget - s.revealedHints.length);
 }
 
-export function agreementLabel(mode: Mode, budget: number) {
-  return mode === "questions" ? "Questions only" : `Questions + ${budget} hints`;
+export function hintsLabel(budget: number) {
+  return budget === 0 ? "No hints" : `${budget} ${budget === 1 ? "hint" : "hints"}`;
 }
 
-export function applyPolicy(s: Session, mode: Mode, budget: number) {
-  if (s.mode === mode && s.budget === budget) return;
-  s.mode = mode;
-  s.budget = Math.max(budget, s.revealedHints.length);
-  s.policyHistory.push(
-    mode === "questions"
-      ? "Changed to questions only"
-      : `Changed to questions + ${s.budget} hints`,
-  );
+/** Change how many hints are allowed. Hints already used are never taken back. */
+export function applyPolicy(s: Session, budget: number) {
+  const next = Math.max(budget, s.revealedHints.length);
+  if (next === s.budget) return;
+  s.budget = next;
+  s.policyHistory.push(next === 0 ? "Changed to no hints" : `Changed to ${hintsLabel(next)}`);
 }
 
 export function revealHint(s: Session, content: TaskContent): boolean {
   if (
-    s.mode !== "hints" ||
+    s.budget === 0 ||
     s.gate !== "hint" ||
     s.revealedHints.length >= s.budget ||
     s.revealedHints.length >= content.hints.length
@@ -111,6 +105,52 @@ export function revealHint(s: Session, content: TaskContent): boolean {
     return false;
   s.revealedHints.push(s.revealedHints.length);
   s.gate = "reasoning";
+  return true;
+}
+
+/** A question the tutor is waiting on before the next hint can be unlocked. */
+export function hasPendingQuestion(s: Session) {
+  return s.gate !== "hint" && remainingHints(s) > 0;
+}
+
+export function pendingQuestion(s: Session, content: TaskContent) {
+  return s.gate === "reasoning" ? "What will you try with this hint?" : content.gateQuestion;
+}
+
+export const isHintRequest = (text: string) => /\bhints?\b/i.test(text);
+
+export function youSay(s: Session, text: string, about: number | null = null) {
+  s.chat.push({ role: "you", kind: "text", text, about });
+}
+function tutorSay(s: Session, m: Omit<ChatMessage, "role">) {
+  s.chat.push({ role: "tutor", ...m });
+}
+export function tutorSays(s: Session, text: string, step: number | null = null, locked = false) {
+  tutorSay(s, { kind: "text", text, step, locked });
+}
+
+/** The student asks for a hint in the chat. The next hint is given, or the tutor says why not. */
+export function askForHint(s: Session, content: TaskContent) {
+  if (s.budget === 0)
+    return tutorSay(s, { kind: "text", text: "Hints are off for this exercise. Use “Change hints” at the top to turn them on." });
+  if (remainingHints(s) === 0)
+    return tutorSay(s, { kind: "text", text: "You've used all your hints. Keep working, ask me a question, or change the number of hints at the top." });
+  if (hasPendingQuestion(s))
+    return tutorSay(s, { kind: "question", text: `Answer this first to unlock hint ${s.revealedHints.length + 1}: ${pendingQuestion(s, content)}` });
+  if (!revealHint(s, content))
+    return tutorSay(s, { kind: "text", text: "There are no more hints for this exercise." });
+  const n = s.revealedHints.length;
+  tutorSay(s, { kind: "hint", hint: n, text: content.hints[n - 1]! });
+  if (remainingHints(s) > 0)
+    tutorSay(s, { kind: "question", text: `To unlock hint ${n + 1}: ${pendingQuestion(s, content)}` });
+  else tutorSay(s, { kind: "text", text: "That was your last hint. Keep working, or ask me a question." });
+}
+
+/** The student's chat message answers the tutor's question. Any non-empty answer counts; nothing is marked. */
+export function answerQuestion(s: Session, content: TaskContent, text: string): boolean {
+  if (!advanceGate(s, text)) return false;
+  if (s.gate === "recall") tutorSay(s, { kind: "question", text: content.gateQuestion });
+  else tutorSay(s, { kind: "text", text: `Hint ${s.revealedHints.length + 1} is unlocked. Ask for it whenever you like.` });
   return true;
 }
 
@@ -139,9 +179,11 @@ export function tutorReply(content: TaskContent, question: string, count: number
     return {
       locked: true,
       step: about,
-      text: "Final answers stay hidden, whichever help you've chosen. Which step could you try next? I can ask you a question about it.",
+      text: "I won't give the full answer. Which step do you want to try next? I can ask you a question about it.",
     };
-  const hit = content.tutor.keywords.find((k) => k.test.test(question));
+  // "I'm stuck on step N" from the menu gets the reply written for that step, not the generic one
+  const forStep = about !== null && /^I'm stuck on step/i.test(question) ? content.tutor.keywords.find((k) => k.step === about) : undefined;
+  const hit = forStep ?? content.tutor.keywords.find((k) => k.test.test(question));
   return {
     locked: false,
     step: about ?? hit?.step ?? null,
@@ -221,7 +263,7 @@ export function contributionEntries(s: Session, content: TaskContent): Contribut
     ...s.gateResponses.map((response, i) => ({
       id: `response-${i}`,
       origin: "you" as const,
-      title: i % 2 === 0 ? "Reasoning after a hint" : "Recall response",
+      title: i % 2 === 0 ? "Your plan after a hint" : "Your answer to a recall question",
       evidence: response,
       step: null,
     })),
@@ -246,14 +288,14 @@ export function contributionEntries(s: Session, content: TaskContent): Contribut
       .map((r) => ({
         id: `explanation-${r.version}`,
         origin: "you" as const,
-        title: `Explanation of the gap (attempt ${r.version})`,
+        title: `Your explanation of the problem (attempt ${r.version})`,
         evidence: r.explanation,
         step: null,
       })),
     ...s.policyHistory.map((p, i) => ({
       id: `policy-${i}`,
       origin: "setting" as const,
-      title: "Assistance changed",
+      title: "Hints changed",
       evidence: p,
       step: null,
     })),

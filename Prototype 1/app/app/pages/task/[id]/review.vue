@@ -23,7 +23,7 @@ const analysing = ref(s.value.seenReview < (r.value?.version ?? 0));
 const stage = ref(0);
 const stageLabels = computed(() => [
   ...content.value.steps.map((st) => `Checking ${st.label.toLowerCase()}`),
-  "Putting your feedback together",
+  "Writing the feedback",
 ]);
 onMounted(async () => {
   if (!analysing.value) return;
@@ -66,7 +66,7 @@ async function toReflection() {
           <span class="bg-primary relative grid size-24 place-items-center rounded-[2rem] shadow-glow"><PencilLine class="size-10" /></span>
         </div>
         <h1 class="font-display mt-8 text-center text-4xl leading-tight font-bold">Reviewing attempt {{ r.version }}</h1>
-        <p class="text-muted-foreground mt-2 text-center">Looking at what you submitted, step by step.</p>
+        <p class="text-muted-foreground mt-2 text-center">Checking each step you wrote.</p>
         <UiTrace class="mx-auto mt-10 max-w-xs gap-4">
           <div v-for="(label, i) in stageLabels" :key="label" class="flex">
             <UiTraceLine :status="i === stage ? 'running' : i > stage ? 'pending' : undefined" class="text-base">
@@ -84,22 +84,22 @@ async function toReflection() {
       <!-- RESULT: the same sheet as the workspace, read-only, with the feedback written against each step -->
       <Motion v-else key="result" :initial="{ opacity: 0, y: 20 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }">
         <header class="mb-7 space-y-2">
-          <p class="text-muted-foreground text-sm font-semibold">Task {{ task.number }} · Review of attempt {{ r.version }}</p>
+          <p class="text-muted-foreground text-sm font-semibold">{{ task.title }} · Review of attempt {{ r.version }}</p>
           <h1 class="font-display text-[2.3rem] leading-[1.03] font-bold text-balance sm:text-5xl">
-            {{ open ? (r.outcome === "repeat" ? "One step still has the same gap" : "One step needs another look") : "No issues found" }}
+            {{ open ? (r.outcome === "repeat" ? "The same step still has a problem" : "One step needs another look") : "No issues found" }}
           </h1>
           <p class="text-muted-foreground max-w-xl text-[17px] leading-relaxed">
-            {{ open ? "Feedback on the steps you wrote. It isn't a grade and doesn't measure what you understand." : "Your steps connect. This checks the work you submitted. It doesn't say whether you understand the idea." }}
+            {{ open ? "Feedback on the steps you wrote. It is not a grade." : "No issues found in the steps you submitted. This is not a grade." }}
           </p>
           <p v-if="stale" role="status" class="text-warning-foreground border-warning-foreground/50 flex items-start gap-2 border-l-4 py-1 pl-3 text-[15px] font-medium">
-            You've edited your attempt since this review. It refers to attempt {{ r.version }}, so check your revision again.
+            You changed your attempt after this review. Review again to check the changes.
           </p>
         </header>
 
-        <section class="bg-card rounded-[2rem] p-6 shadow-md sm:p-9" aria-label="Your submitted steps">
-          <ol class="divide-y">
-            <li v-for="(step, i) in content.steps" :id="`review-step-${i}`" :key="step.label" tabindex="-1" class="py-7 outline-none first:pt-0 last:pb-0">
-              <div class="mb-3 flex items-center gap-3">
+        <section aria-label="Your submitted steps">
+          <ol>
+            <li v-for="(step, i) in content.steps" :id="`review-step-${i}`" :key="step.label" tabindex="-1" class="grid grid-cols-[36px_minmax(0,1fr)] gap-x-4 outline-none">
+              <div class="flex flex-col items-center">
                 <span
                   class="grid size-9 shrink-0 place-items-center rounded-full text-sm font-bold"
                   :class="open && i === gapStep ? 'bg-warning text-warning-foreground' : open && i > gapStep ? 'bg-foreground/8' : 'bg-forest text-white'"
@@ -108,15 +108,17 @@ async function toReflection() {
                   <Check v-else-if="!(open && i > gapStep)" class="size-4" :stroke-width="3" />
                   <template v-else>{{ i + 1 }}</template>
                 </span>
-                <h2 class="font-display text-xl font-bold">{{ step.label }}</h2>
+                <span v-if="i < content.steps.length - 1" class="mt-2 w-0.5 flex-1 rounded-full" :class="open && i >= gapStep ? 'bg-foreground/12' : 'bg-forest/40'" aria-hidden="true" />
               </div>
+              <div class="min-w-0 pb-9">
+              <h2 class="font-display mb-2 flex min-h-9 items-center text-xl font-bold">{{ step.label }}</h2>
 
               <div v-if="r.blocks[i]?.trim()" class="text-[17px] leading-8"><RichText :text="r.blocks[i]!" /></div>
               <p v-else class="text-muted-foreground">Nothing written.</p>
 
               <!-- Feedback for this step -->
               <p v-if="open && i > gapStep" class="text-muted-foreground mt-3 flex items-start gap-2 text-[15px] leading-snug">
-                <CornerDownRight class="mt-0.5 size-4 shrink-0" /> Builds on step {{ gapStep + 1 }}, so it's easiest to recheck once that is settled.
+                <CornerDownRight class="mt-0.5 size-4 shrink-0" /> Depends on step {{ gapStep + 1 }}. Fix that one first.
               </p>
               <p v-else-if="!(open && i === gapStep)" class="text-forest mt-3 flex items-start gap-2 text-[15px] leading-snug font-medium">
                 <Check class="mt-0.5 size-4 shrink-0" :stroke-width="3" /> <span><RichText :text="content.supported[i]!" /></span>
@@ -144,11 +146,14 @@ async function toReflection() {
                   </template>
                   <template v-else>
                     <UiLabel for="explanation" class="font-display text-lg font-bold">Why does this step fail?</UiLabel>
-                    <UiTextarea id="explanation" v-model="s.explainDraft" class="bg-card text-foreground min-h-[110px] text-[16px]" placeholder="In your own words. It isn't checked for correctness." aria-describedby="explain-help" />
+                    <SampleInput label="explanation" class="pt-1" @fill="s.explainDraft = content.sampleAnswers.explanation">
+                      <UiTextarea id="explanation" v-model="s.explainDraft" class="bg-card text-foreground min-h-[110px] text-[16px]" placeholder="Write it in your own words. It isn't marked." aria-describedby="explain-help" />
+                    </SampleInput>
                   </template>
-                  <p id="explain-help" class="text-sm opacity-85">Explain it first, then revise it yourself. The tutor won't fill in the correction.</p>
+                  <p id="explain-help" class="text-sm opacity-85">Explain the problem first. Then fix the step yourself; the tutor won't write the fix.</p>
                 </div>
-                <UiButton variant="link" class="text-warning-foreground h-auto p-0 text-sm" @click="finishOpen = true">Not now? Finish with this gap open</UiButton>
+                <UiButton variant="link" class="text-warning-foreground h-auto p-0 text-sm" @click="finishOpen = true">Skip: finish with this issue open</UiButton>
+              </div>
               </div>
             </li>
           </ol>
@@ -168,8 +173,8 @@ async function toReflection() {
     <UiAlertDialog v-model:open="finishOpen">
       <UiAlertDialogContent>
         <UiAlertDialogHeader>
-          <UiAlertDialogTitle>Finish with this gap open?</UiAlertDialogTitle>
-          <UiAlertDialogDescription>That's fine. It'll be listed in your reflection as a point to revisit, and you can reopen the task whenever you like.</UiAlertDialogDescription>
+          <UiAlertDialogTitle>Finish with this issue open?</UiAlertDialogTitle>
+          <UiAlertDialogDescription>It will be listed in your reflection as still open. You can reopen the exercise later.</UiAlertDialogDescription>
         </UiAlertDialogHeader>
         <UiAlertDialogFooter>
           <UiAlertDialogCancel>Keep working</UiAlertDialogCancel>

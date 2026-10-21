@@ -3,11 +3,10 @@
 A study workspace where students do the thinking and an AI tutor helps with the rest. The core loop is
 **attempt → ask for targeted help → review → explain and revise → reflect on who thought it.**
 
-Nuxt 4 · Vue 3 · TypeScript · Tailwind CSS v4 · shadcn/vue (+ its message, questionnaire, trace, attachment and
-code-block components) · motion-v for animation · KaTeX for maths.
+Nuxt 4 · Vue 3 · TypeScript · Tailwind CSS v4 · shadcn/vue · motion-v for animation · KaTeX for maths.
 
-The app is a front-end experience: tutor replies, feedback and attribution come from prepared content, and state lives in
-the browser (`localStorage`). There is no backend, account system or model call.
+This is a low-fidelity prototype of the core flow. Tutor replies, feedback and attribution come from prepared content, and
+state lives in the browser (`localStorage`). There is no backend, account system or model call.
 
 ## Run it
 
@@ -27,48 +26,44 @@ npm run typecheck
 
 ## What's in the app
 
-| Area | Screens and flows |
+One list and one journey. See [docs/SIMPLIFICATION.md](docs/SIMPLIFICATION.md) for what was removed and why.
+
+| Screen | What it does |
 | --- | --- |
-| **Getting in** | Sign in (email + 6-digit code, or university account) → three-step onboarding that sets standing assistance defaults |
-| **Today** | Greeting, resume-where-you-left-off, deadline timeline, points you left open, recent sessions |
-| **Library** | Courses and sheets with progress; sheet page with rename, deadline picker, remove; task rows with status |
-| **Add a sheet** | Upload / photo / paste → scan → check detected tasks, course and deadline → done. Any file or text produces the same detected sheet (Algorithms · Sheet 5) |
-| **Task** | Brief with statement, how a session goes, earlier sessions, reopen, discard |
-| **Session** | Set-up questionnaire → workspace (one attempt sheet, tutor that asks which step you mean and sends you back to it, gated hint ladder, assistance change with a pause, sample handwritten photo) → review (labelled wait, the same sheet with feedback written against each step, explain-then-revise) → reflection (who thought it, correct a label, points to revisit, finish) |
-| **History** | Every finished session with its reflection; reopen a task |
-| **Settings** | Profile, assistance defaults, notifications, appearance (reduce motion, larger text), privacy (export JSON, delete data), sign out |
-| **Search** | `⌘K` / `Ctrl K` command palette for pages and tasks |
+| **Exercises** (`/`) | The four exercises. Each row says *Start*, *Continue* or *View reflection*. |
+| **Exercise** | The statement, and the button to start or continue. |
+| **Set up** | Three choices on one page (number of hints 0–5, starter question, how to begin) with a summary of what they mean. |
+| **Work** | The exercise, one attempt sheet with three steps, a tutor that asks which step you mean and sends you back to it, gated hints, a way to change the number of hints (with a pause). |
+| **Review** | A labelled wait, then the same sheet with feedback on each step, then explain and revise. |
+| **Reflect** | Who thought it: counts, points to revisit, every contribution with a link back, and a way to correct a label. *Finish* returns to the list. |
 
-### Scripted tasks
+A short "About this prototype" dialog opens on every page load (limits of the prepared replies, the test button, and the needs the prototype addresses); it can be reopened from the header or the session menu. Every open-ended input shows a dashed **Test · Fill sample** chip while it is focused; click it to fill the input with prepared text. The session menu (top right) has **Start over**. `⌘K` / `Ctrl K` is for the facilitator: jump to an exercise or choose the next review outcome.
 
-Four tasks have full content (statement, steps, hints, tutor replies, sample attempts, feedback):
+### Exercises
 
-- Discrete Mathematics, sheet 3: **A recurrence proof**, **Divisibility by 3**
-- Algorithms & Data Structures, sheet 5 (arrives through *Add exercise sheet*): **Why `find_max` is correct**, **The invariant of insertion sort**
+- Discrete Mathematics: **A recurrence proof**, **Divisibility by 3**
+- Algorithms: **Why `find_max` is correct**, **The invariant of insertion sort**
 
-Other tasks are already finished and show their reflection from History.
+Each has full content (statement, steps, hints, tutor replies, sample attempts, feedback).
 
 ### Choosing the review outcome
 
-The first review of an attempt shows a gap and the next one shows no issues. To walk another path, open the command
-palette (`⌘K`) and choose **Review outcome for the next check**: *A gap, then resolved*, *The same gap twice* or
-*No issues found*. The choice applies to the current task and to tasks started afterwards.
+The first review of an attempt shows a gap and the next one shows no issues. To walk another path, press `⌘K` and choose
+**Review outcome for the next check**: *A gap, then resolved*, *The same gap twice* or *No issues found*. The choice applies to
+the current exercise and to exercises started afterwards.
 
-### Sign-in
-
-Any well-formed email works, and so does any 6-digit code. The university-account button signs in directly.
-State persists in `localStorage` under `attempt-first:v3`; **Settings → Privacy and data → Delete** resets everything.
+Nothing is stored. A page refresh starts everything again; **Start over** resets one exercise.
 
 ## Structure
 
 ```
 app/
-  pages/          welcome, onboarding, index (Today), library/, history/, settings, task/[id]/{index,setup,work,review,reflect}
-  layouts/        default (sidebar / tab bar), session (journey header), flow (full-screen steps)
-  components/     brand/, library/, session/, shared/, shell/, ui/ (shadcn/vue)
+  pages/          index (Exercises), task/[id]/{index,setup,work,review,reflect}
+  layouts/        default (logo only), session (journey header)
+  components/     brand/, session/, shared/, shell/ (⌘K), ui/ (shadcn/vue)
   composables/    useApp (store + persistence), useSession, useAssistDialog, useCommandMenu
   domain/         session.ts: pure rules for hints, policy changes, review snapshots, attribution
-  data/           types, seed library and history, content/ (one file per scripted task)
+  data/           types, exercises, content/ (one file per exercise)
   assets/css/     tokens.css (design tokens), tailwind-theme.css, main.css
 ```
 

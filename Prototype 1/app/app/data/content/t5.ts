@@ -16,7 +16,6 @@ export const t5: TaskContent = {
             i -= 1
         a[i + 1] = key`,
   },
-  reminder: "Your invariant has to say more than \"sorted\". What else must stay true about the prefix?",
   steps: [
     {
       label: "Initialization",
@@ -41,6 +40,11 @@ export const t5: TaskContent = {
     "Where does the inner loop leave $key$, relative to the smaller and larger elements?",
     "When $j$ reaches the end, which positions does the invariant cover?",
   ],
+  sampleAnswers: {
+    plan: "I'll write what holds for the prefix before each pass, then check j = 1.",
+    recall: "The prefix a[0..j-1] is sorted and holds the original elements of a[0..j-1].",
+    explanation: "Saying the prefix is sorted is not enough: it could contain different values than the original prefix. The invariant also has to say it holds the same elements.",
+  },
   gateQuestion: "Without rereading, which two things does your invariant say about the prefix?",
   starterQuestion: "Before iteration $j$, what can you say about the first $j$ elements?",
   tutor: {
@@ -102,7 +106,7 @@ export const t5: TaskContent = {
     revisit: "Initialization: stating an invariant that is strong enough",
   },
   repeatNote:
-    "This is the same gap as in your last review. Your explanation from attempt 1 is below.",
+    "This is the same problem as in your last review. Your earlier explanation is below.",
   supported: [
     "States a property of the prefix and checks it for $j=1$.",
     "Explains how the inner loop places $key$.",

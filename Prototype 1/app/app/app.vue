@@ -1,17 +1,5 @@
-<script setup lang="ts">
-const app = useApp();
-
-watchEffect(() => {
-  if (import.meta.client) {
-    document.documentElement.classList.toggle("large-text", app.state.value.settings.largeText);
-    document.documentElement.classList.toggle("reduce-motion", app.state.value.settings.reduceMotion);
-  }
-});
-const reduced = computed(() => (app.state.value.settings.reduceMotion ? "always" : "user"));
-</script>
-
 <template>
-  <MotionConfig :reduced-motion="reduced">
+  <MotionConfig reduced-motion="user">
     <UiTooltipProvider :delay-duration="250">
       <a
         href="#main"
@@ -22,6 +10,7 @@ const reduced = computed(() => (app.state.value.settings.reduceMotion ? "always"
         <NuxtPage />
       </NuxtLayout>
       <CommandMenu />
+      <IntroDialog />
       <UiToaster position="bottom-center" :toast-options="{ class: 'font-sans' }" />
     </UiTooltipProvider>
   </MotionConfig>

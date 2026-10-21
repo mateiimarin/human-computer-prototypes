@@ -14,7 +14,6 @@ export const t4: TaskContent = {
             m = a[i]
     return m`,
   },
-  reminder: "An invariant is a statement about the state before an iteration, not a description of what the loop does.",
   steps: [
     {
       label: "Initialization",
@@ -39,6 +38,11 @@ export const t4: TaskContent = {
     "When the loop ends, what is the value of $i$? What does the invariant say about it?",
     "Connect the invariant at termination to the claim you set out to prove.",
   ],
+  sampleAnswers: {
+    plan: "I'll say what m holds before each iteration, then check the first one.",
+    recall: "Before the iteration for index i, m is the largest of a[0..i-1].",
+    explanation: "\"m only grows\" is not enough. It doesn't cover the case a[i] ≤ m, where m stays the same. I have to show m is still the maximum of the longer prefix in both cases.",
+  },
   gateQuestion: "Without rereading, what does your invariant say about $m$?",
   starterQuestion: "After the first line, what do you know about $m$ before the loop starts?",
   tutor: {
@@ -100,7 +104,7 @@ export const t4: TaskContent = {
     revisit: "Maintenance: covering every branch of the loop body",
   },
   repeatNote:
-    "This is the same gap as in your last review. Your explanation from attempt 1 is below.",
+    "This is the same problem as in your last review. Your earlier explanation is below.",
   supported: [
     "States the invariant and checks it for $i=1$.",
     "Covers both branches of the if-statement.",

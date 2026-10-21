@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { contents } from "../app/data/content";
 import {
   advanceGate,
+  answerQuestion,
+  askForHint,
+  hasPendingQuestion,
   applyPolicy,
   contributionEntries,
   createSession,
@@ -20,15 +23,48 @@ import {
 
 const content = contents.t1!;
 
-describe("assistance boundaries", () => {
-  it("does not reveal hints in questions-only mode", () => {
+describe("hints in the chat", () => {
+  it("gives a hint, asks for a plan, then a recall answer, then unlocks the next hint", () => {
     const s = createSession("t1");
+    askForHint(s, content);
+    expect(s.revealedHints).toEqual([0]);
+    expect(s.chat.map((m) => m.kind)).toEqual(["hint", "question"]);
+    expect(hasPendingQuestion(s)).toBe(true);
+
+    // Asking again while a question is open does not use a hint
+    askForHint(s, content);
+    expect(s.revealedHints).toEqual([0]);
+    expect(s.chat.at(-1)!.text).toMatch(/Answer this first/);
+
+    expect(answerQuestion(s, content, "  ")).toBe(false);
+    expect(answerQuestion(s, content, "Check n = 1")).toBe(true);
+    expect(s.chat.at(-1)!.text).toBe(content.gateQuestion);
+    expect(answerQuestion(s, content, "It assumes k")).toBe(true);
+    expect(hasPendingQuestion(s)).toBe(false);
+    askForHint(s, content);
+    expect(s.revealedHints).toEqual([0, 1]);
+  });
+
+  it("explains that hints are off or used up instead of giving one", () => {
+    const off = createSession("t1");
+    applyPolicy(off, 0);
+    askForHint(off, content);
+    expect(off.revealedHints).toEqual([]);
+    expect(off.chat.at(-1)!.text).toMatch(/Hints are off/);
+  });
+});
+
+describe("assistance boundaries", () => {
+  it("does not reveal hints when none were chosen", () => {
+    const s = createSession("t1");
+    applyPolicy(s, 0);
+    expect(s.budget).toBe(0);
     expect(revealHint(s, content)).toBe(false);
   });
 
   it("charges only new hints and gates progression on a contribution", () => {
     const s = createSession("t1");
-    applyPolicy(s, "hints", 3);
+    applyPolicy(s, 3);
     expect(revealHint(s, content)).toBe(true);
     expect(revealHint(s, content)).toBe(false);
     expect(advanceGate(s, "   ")).toBe(false);
@@ -42,10 +78,10 @@ describe("assistance boundaries", () => {
 
   it("does not replenish consumption when lowering and raising assistance", () => {
     const s = createSession("t1");
-    applyPolicy(s, "hints", 3);
     revealHint(s, content);
-    applyPolicy(s, "questions", 3);
-    applyPolicy(s, "hints", 5);
+    applyPolicy(s, 0);
+    expect(s.budget).toBe(1); // a hint already used is never taken back
+    applyPolicy(s, 5);
     expect(remainingHints(s)).toBe(4);
   });
 
@@ -117,7 +153,7 @@ describe("contribution evidence", () => {
   it("only references help that was actually shown", () => {
     const s = createSession("t1");
     expect(contributionEntries(s, content)).toHaveLength(0);
-    applyPolicy(s, "hints", 3);
+    applyPolicy(s, 3);
     revealHint(s, content);
     const entries = contributionEntries(s, content);
     expect(entries.filter((e) => e.origin === "supplied")).toHaveLength(1);

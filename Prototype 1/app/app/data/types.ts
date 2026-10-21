@@ -1,39 +1,15 @@
 export type Scenario = "issue" | "repeat" | "clear";
-export type Mode = "questions" | "hints";
 export type StartApproach = "blank" | "scaffold";
 export type Origin = "you" | "prompted" | "supplied" | "setting";
 export type Blocks = [string, string, string];
-export type Tone = "sunrise" | "dusk" | "sky" | "meadow" | "coral";
-export type IlloName = "stairs" | "hills" | "orbit" | "blocks" | "waves" | "sun";
 export type Phase = "setup" | "work" | "review" | "reflect" | "done";
-
-export interface Course {
-  id: string;
-  name: string;
-  term: string;
-  tone: Tone;
-  illo: IlloName;
-}
-
-export interface Sheet {
-  id: string;
-  courseId: string;
-  title: string;
-  number: number;
-  /** ISO date */
-  due: string;
-  taskIds: string[];
-  addedAt: string;
-}
 
 export interface Task {
   id: string;
-  sheetId: string;
-  courseId: string;
-  number: number;
+  /** Subject shown under the title, e.g. "Discrete Mathematics". */
+  course: string;
   title: string;
   topic: string;
-  minutes: number;
 }
 
 export interface ReviewGap {
@@ -51,9 +27,10 @@ export interface TaskContent {
   statement: string;
   givens: string[];
   code?: { lang: string; source: string };
-  reminder: string;
   steps: { label: string; scaffold: string; placeholder: string }[];
   hints: string[];
+  /** Text the "fill with sample" buttons put into open-ended inputs. */
+  sampleAnswers: { plan: string; recall: string; explanation: string };
   gateQuestion: string;
   starterQuestion: string;
   tutor: {
@@ -77,6 +54,20 @@ export interface Exchange {
   locked?: boolean;
 }
 
+/** One line of the tutor chat. Display only: contributions are derived from hints, exchanges and answers. */
+export interface ChatMessage {
+  role: "you" | "tutor";
+  kind: "text" | "hint" | "question";
+  text: string;
+  /** Hint number, for kind "hint". */
+  hint?: number;
+  /** The step a tutor reply sends the student back to. */
+  step?: number | null;
+  locked?: boolean;
+  /** The step a student's message is about. */
+  about?: number | null;
+}
+
 export interface Review {
   version: number;
   blocks: Blocks;
@@ -91,7 +82,7 @@ export interface Session {
   phase: Phase;
   started: boolean;
   startedAt: string;
-  mode: Mode;
+  /** How many hints the student agreed to (0–5). 0 means the tutor only asks questions. */
   budget: number;
   start: StartApproach;
   starterGuidance: boolean;
@@ -100,19 +91,17 @@ export interface Session {
   gate: "hint" | "reasoning" | "recall";
   gateResponses: string[];
   exchanges: Exchange[];
+  chat: ChatMessage[];
   policyHistory: string[];
   reviews: Review[];
   scenario: Scenario;
-  attachment: boolean;
-  /** Attribution id → optional note. Presence means flagged. */
+  /** Contribution id → the student's correction of its label (see relabelChoices). */
   flags: Record<string, string>;
   focusStep: number | null;
   /** Open the tutor panel on arrival in the workspace (set by "Show in tutor"). */
   openTutor?: boolean;
-  /** The step chosen in the tutor composer, kept while the panel changes. */
-  aboutDraft?: number | null;
+  /** What is typed in the tutor chat, kept while the panel changes. */
   tutorDraft: string;
-  gateDraft: string;
   explainDraft: string;
   seenReview: number;
   finishedAt: string | null;
@@ -128,36 +117,9 @@ export interface Contribution {
   target?: "tutor";
 }
 
-export interface HistoryEntry {
-  id: string;
-  taskId: string;
-  finishedAt: string;
-  /** "resolved" or "gaps" (finished with something to revisit) */
-  outcome: "resolved" | "gaps";
-  gaps: string[];
-  entries: Contribution[];
-  attempts: number;
-  hintsUsed: number;
-  /** Present when it came from a live session, so it can be reopened. */
-  live: boolean;
-  session?: Session;
-  flags?: Record<string, string>;
-}
-
-export interface Settings {
-  mode: Mode;
+/** The assistance agreement a new session starts from. */
+export interface Defaults {
   budget: number;
   start: StartApproach;
   starterGuidance: boolean;
-  pauseSeconds: number;
-  reminders: boolean;
-  weeklyDigest: boolean;
-  reduceMotion: boolean;
-  largeText: boolean;
-}
-
-export interface UserProfile {
-  name: string;
-  email: string;
-  program: string;
 }

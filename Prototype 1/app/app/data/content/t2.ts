@@ -5,7 +5,6 @@ export const t2: TaskContent = {
   statement:
     "Show by induction that $n^3-n$ is divisible by $3$ for every integer $n\\geq1$.",
   givens: ["Write $3\\mid m$ when $m$ is an integer multiple of $3$."],
-  reminder: "The step has to use your hypothesis. An expansion on its own isn't a proof.",
   steps: [
     {
       label: "Base case",
@@ -30,6 +29,11 @@ export const t2: TaskContent = {
     "After expanding, which part of the expression is $k^3-k$?",
     "What is left once you take out $k^3-k$? Why is that part a multiple of 3?",
   ],
+  sampleAnswers: {
+    plan: "I'll write the next term in terms of the one I assume, and look for what is left over.",
+    recall: "I assume that k³ − k is divisible by 3 for one fixed k.",
+    explanation: "Only the 3k² term is shown to be divisible by 3. The terms k³ and 2k are left over, and I never used my hypothesis for them. I need to show they are divisible by 3 too.",
+  },
   gateQuestion: "Without rereading, what is the equation you assume for k?",
   starterQuestion: "What is the expression equal to when n is the smallest allowed value?",
   tutor: {
@@ -92,7 +96,7 @@ export const t2: TaskContent = {
     revisit: "Induction step: using the hypothesis for every remaining term",
   },
   repeatNote:
-    "This is the same gap as in your last review. Your explanation from attempt 1 is below.",
+    "This is the same problem as in your last review. Your earlier explanation is below.",
   supported: [
     "Evaluates $1^3-1$ and recognises it as a multiple of 3.",
     "Names the assumption for k.",
