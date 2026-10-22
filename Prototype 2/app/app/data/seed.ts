@@ -2,7 +2,6 @@ import type { Workspace, SavedQuestion } from './workspace'
 import type { EvidenceEntry } from '~/lib/evidence'
 import { daysAgo, daysFrom } from '~/lib/format'
 import { packs } from './packs'
-import { blankSession, emptyAnswer } from '~/lib/session'
 import type { Question } from './types'
 
 const q = (packId: string, id: string): Question => {
@@ -56,57 +55,22 @@ export function makeSeed(): Workspace {
   ]
 
   const sv = (packId: string, qid: string, sessionId: string, sessionTitle: string, days: number, due: number | null, over: Partial<SavedQuestion> = {}): SavedQuestion => ({
-    qid, packId, courseId: 'ads', savedAt: daysAgo(days), sessionId, sessionTitle, excluded: false,
+    qid, packId, savedAt: daysAgo(days), sessionId, sessionTitle,
     dueAt: due === null ? null : due <= 0 ? daysAgo(-due, 8) : daysFrom(due), last: null, times: 0, ...over,
   })
 
-  const coin = packs['coin-change']!
-  const active = blankSession(coin, 'ads')
-  active.startedAt = daysAgo(0, 9)
-  active.step = 'work'
-  active.route = 'work'
-  active.pre = {
-    submitted: true, skipped: false, at: daysAgo(0, 9),
-    answers: {
-      'cc-q1': { choice: 'b', idk: false, confidence: 'medium' },
-      'cc-q2': { choice: 'a', idk: false, confidence: 'high' },
-      'cc-q3': { choice: null, idk: true, confidence: 'low' },
-    },
-  }
-  active.work.messages.push(
-    { id: 'm-seed-1', role: 'student', text: 'I think greedy works: always take the largest coin that still fits.' },
-    { id: 'm-seed-2', role: 'companion', kind: 'question', text: 'Try it on coins $\\{1, 3, 4\\}$ with $T = 6$. What does greedy give, and can you find any combination with fewer coins?' },
-  )
-  active.work.hints = 0
-
   return {
-    version: 3,
-    signedIn: true,
-    profile: { name: 'Mia Keller', email: 'mia.keller@university.edu', university: 'Example University' },
-    settings: { theme: 'dark', reduceMotion: false, largeText: false, defaultHelp: 'hints', askConfidence: true, remindDue: true, remindWeekly: true, weeklyDay: 'Sunday' },
-    courseId: 'ads',
-    courses: [
-      {
-        id: 'ads', name: 'Algorithms and Data Structures', code: 'CS 241', term: 'Autumn 2026',
-        exam: { date: daysFrom(84), topics: { dp: { on: true, priority: 'high' }, search: { on: true, priority: 'normal' }, graphs: { on: true, priority: 'normal' } } },
-      },
-      { id: 'prob', name: 'Discrete Probability', code: 'MATH 204', term: 'Autumn 2026', exam: { date: null, topics: {} } },
-    ],
-    sheets: [
-      { id: 'ads-3', courseId: 'ads', no: 3, title: 'Searching and invariants', topicId: 'search', packIds: ['binary-search'], addedAt: daysAgo(27), source: 'syllabus', due: daysAgo(8) },
-      { id: 'ads-4', courseId: 'ads', no: 4, title: 'Dynamic programming', topicId: 'dp', packIds: ['max-subarray', 'coin-change'], addedAt: daysAgo(14), source: 'syllabus', due: daysFrom(4) },
-    ],
     entries,
     sessions: [
       {
-        id: 's-seed-1', packId: 'binary-search', courseId: 'ads', at: daysAgo(6), title: bs.title, mode: 'full', condition: 'independent',
+        id: 's-seed-1', packId: 'binary-search', at: daysAgo(6), title: bs.title, condition: 'independent',
         line: 'Invariant gap observed. Bounds partial. Termination skipped.',
         bySub: { 'bs-inv': 'gap', 'bs-bounds': 'partial', 'bs-term': 'unverified' },
       },
       {
-        id: 's-seed-2', packId: 'max-subarray', courseId: 'ads', at: daysAgo(12), title: mx.title, mode: 'full', condition: 'assisted',
+        id: 's-seed-2', packId: 'max-subarray', at: daysAgo(12), title: mx.title, condition: 'assisted',
         line: 'Completed with the solution open. Nothing counts as independent evidence yet.',
-        bySub: { 'mx-state': 'unverified', 'mx-rec': 'unverified', 'mx-safe': 'unverified' },
+        bySub: { 'dp-state': 'unverified', 'dp-recurrence': 'unverified', 'dp-substructure': 'unverified' },
       },
     ],
     saved: [
@@ -115,11 +79,8 @@ export function makeSeed(): Workspace {
       sv('max-subarray', 'mx-q3', 's-seed-2', mx.title, 12, 0),
       sv('binary-search', 'bs-c1', 's-seed-1', bs.title, 6, 2),
       sv('max-subarray', 'mx-c1', 's-seed-2', mx.title, 12, 5),
-      sv('binary-search', 'bs-d1', 's-seed-1', bs.title, 6, null, { excluded: true }),
     ],
-    active,
-    weeklyDoneAt: null,
+    open: {},
+    active: null,
   }
 }
-
-export { emptyAnswer }

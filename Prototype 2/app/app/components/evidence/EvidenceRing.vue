@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EvidenceState } from '~/data/types'
 
-/** One arc per sub-concept, each with its own state. Unverified arcs are dashed, never filled. */
+/** One arc per concept, each with its own state. Unverified arcs are dashed, never filled. */
 const props = withDefaults(defineProps<{ states: EvidenceState[]; size?: number; stroke?: number; label?: string }>(), { size: 96, stroke: 9 })
 const r = computed(() => (props.size - props.stroke) / 2)
 const cx = computed(() => props.size / 2)

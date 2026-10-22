@@ -29,22 +29,21 @@ function skip(_: Confidence | null, later: boolean) {
   <div>
     <template v-if="!s.pre.submitted">
       <StageHeader
-        :title="`Three questions before you start`" :description="`On the ideas behind “${pack.title}”. Answer from memory and say how sure you are. Your results stay hidden until your check, so you can compare then.`"
-        next="Choose how you want to work on the exercise."
+        title="Three questions before you start" description="Answer from memory. You see the results at the end."
       />
       <QuestionRunner
         :questions="pack.quiz" :answers="s.pre.answers" submit-label="Save baseline" skip-label="Skip the baseline"
-        recap-title="Save your baseline?" recap-note="You can still change any answer. Once saved, it is recorded as your first attempt." :confidence="ws.settings.askConfidence"
-        @submit="submit" @skip="skipOpen = true" @exit="navigateTo('/study')"
+        recap-title="Save your baseline?" recap-note="You can still change any answer. Once saved, it is recorded as your first attempt."
+        @submit="submit" @skip="skipOpen = true" @exit="navigateTo('/')"
       />
     </template>
 
     <!-- Only reachable by going back after saving: the baseline is a recorded attempt. -->
     <div v-else class="max-w-md space-y-6">
-      <StageHeader title="Baseline saved" description="Your answers stay hidden until your check, then you see them next to how you did." />
+      <StageHeader title="Baseline saved" />
       <UiButton size="xl" @click="go('route')">Choose how to continue <ArrowRight /></UiButton>
     </div>
 
-    <SkipDialog v-model:open="skipOpen" title="Skip the baseline?" consequence="Without it, your results can’t be compared with a starting point. They will say that a baseline comparison is unavailable." confirm="Skip baseline" @confirm="skip" />
+    <SkipDialog v-model:open="skipOpen" title="Skip the baseline?" consequence="You will not get a before-and-after comparison." confirm="Skip baseline" @confirm="skip" />
   </div>
 </template>

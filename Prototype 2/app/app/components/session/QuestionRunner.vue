@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, Check, Pencil } from '@lucide/vue'
 import type { Question } from '~/data/types'
 import type { AnswerState } from '~/data/session'
 import { isAnswered, answerText } from '~/lib/session'
+import { sampleWhy } from '~/data/packs'
 
 /** One question at a time, then a recap where answers can still be revised. Shared by baseline, post-quiz, twin check and review. */
 const props = withDefaults(defineProps<{
@@ -70,7 +71,7 @@ defineExpose({ idx, go })
       <!-- a question -->
       <div v-if="q && a" :key="q.id" class="space-y-7">
         <div class="space-y-2">
-          <p v-if="isClaim" class="text-muted-foreground text-sm">Claim. Reported separately from the before and after comparison.</p>
+          <p v-if="isClaim" class="text-muted-foreground text-sm">True or false</p>
           <h2 class="text-[22px] leading-9 font-medium sm:text-2xl sm:leading-10"><RichText :text="q.prompt" /></h2>
         </div>
 
@@ -92,7 +93,9 @@ defineExpose({ idx, go })
           <div v-if="isAnswered(a)" class="space-y-5">
             <div v-if="q.justify" class="space-y-2">
               <UiLabel :for="`just-${q.id}`">Why? <span class="text-muted-foreground font-normal">One sentence, optional</span></UiLabel>
-              <UiTextarea :id="`just-${q.id}`" :model-value="a.justification ?? ''" rows="2" class="min-h-16" placeholder="Because…" @update:model-value="(v) => (a!.justification = String(v))" />
+              <SampleInput label="Why?" @fill="a!.justification = sampleWhy(q.id)">
+                <UiTextarea :id="`just-${q.id}`" :model-value="a.justification ?? ''" rows="2" class="min-h-16" placeholder="Because…" @update:model-value="(v) => (a!.justification = String(v))" />
+              </SampleInput>
             </div>
             <ConfidencePicker v-if="confidence" v-model="a.confidence" />
           </div>
@@ -114,7 +117,7 @@ defineExpose({ idx, go })
           <p v-if="recapNote" class="text-muted-foreground text-base leading-7">{{ recapNote }}</p>
         </div>
         <ol class="divide-border divide-y">
-          <li v-for="(x, i) in questions" :key="x.id" class="flex items-start gap-4 py-4">
+          <li v-for="(x, i) in questions" :key="x.id" class="group flex items-start gap-4 py-4">
             <span class="text-muted-foreground mt-0.5 w-5 shrink-0 text-sm tabular-nums">{{ i + 1 }}</span>
             <div class="min-w-0 flex-1 space-y-1">
               <p class="text-[15px] leading-6"><RichText :text="x.prompt" /></p>
@@ -122,7 +125,7 @@ defineExpose({ idx, go })
                 <template v-if="isAnswered(answers[x.id])"><RichText :text="answerText(x, answers[x.id])" /></template><template v-else>Not answered</template>
               </p>
             </div>
-            <UiButton variant="ghost" size="sm" :aria-label="`Edit answer ${i + 1}`" @click="go(i)"><Pencil /> Edit</UiButton>
+            <UiButton variant="ghost" size="sm" class="pointer-coarse:opacity-100 opacity-0 group-hover:opacity-100 focus-visible:opacity-100" :aria-label="`Edit answer ${i + 1}`" @click="go(i)"><Pencil /> Edit</UiButton>
           </li>
         </ol>
         <div class="flex flex-wrap items-center justify-between gap-3 pt-2">

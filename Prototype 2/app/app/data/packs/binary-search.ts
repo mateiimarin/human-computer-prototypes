@@ -1,23 +1,19 @@
 import type { Pack } from '../types'
+import { concept } from '../catalog'
 
 export const binarySearch: Pack = {
   id: 'binary-search',
   title: 'Binary search and its invariant',
   sheetNo: '3.1',
   topicId: 'search',
-  conceptId: 'search',
   statement:
     'Given a sorted array $a$ and a target $t$, return an index $i$ with $a_i = t$, or $-1$ if there is none. State a **loop invariant** that makes the algorithm correct.',
   example: 'For $a = [1, 3, 5, 7, 9, 11]$ and $t = 7$ the answer is $3$.',
-  subs: [
-    { id: 'bs-inv', name: 'Loop invariant', blurb: 'The statement that stays true on every iteration.' },
-    { id: 'bs-bounds', name: 'Updating the bounds', blurb: 'Why the bound moves to $mid \\pm 1$.' },
-    { id: 'bs-term', name: 'Termination', blurb: 'Why the loop must end.' },
-  ],
-  echoes: [{ sub: 'bs-inv', earlier: 'mx-safe', text: 'Both come down to saying why a step is safe: what stays true after it.' }],
+  subs: [concept('bs-inv'), concept('bs-bounds'), concept('bs-term')],
+  echoes: [{ sub: 'bs-inv', earlier: 'dp-substructure', text: 'Both come down to saying why a step is safe: what stays true after it.' }],
   quiz: [
     {
-      id: 'bs-q1', sub: 'bs-inv', prompt: 'Which statement is a valid loop invariant for the search over $a[lo..hi]$?',
+      id: 'bs-q1', sub: 'bs-inv', prompt: 'Binary search looks for a value $t$ in a sorted array by keeping an interval $a[lo..hi]$. Which statement is a valid loop invariant?',
       choices: [
         { id: 'a', label: 'If $t$ occurs in the array, it occurs within $a[lo..hi]$.' },
         { id: 'b', label: '$a[mid] \\le t$ holds in every iteration.' },
@@ -27,7 +23,7 @@ export const binarySearch: Pack = {
       why: 'The invariant says the search space still contains the target if it exists. It is true at the start and preserved by each update.',
     },
     {
-      id: 'bs-q2', sub: 'bs-bounds', prompt: 'After comparing, $a[mid] < t$. How do you update the bounds?',
+      id: 'bs-q2', sub: 'bs-bounds', prompt: 'In that search, you compare and find $a[mid] < t$. How do you update the bounds?',
       choices: [
         { id: 'a', label: '$lo = mid$.' },
         { id: 'b', label: '$lo = mid + 1$.' },
@@ -37,7 +33,7 @@ export const binarySearch: Pack = {
       why: '$a[mid]$ is too small and so is everything left of it. Moving to $mid+1$ also shrinks the interval.',
     },
     {
-      id: 'bs-q3', sub: 'bs-term', prompt: 'What guarantees that the loop terminates?',
+      id: 'bs-q3', sub: 'bs-term', prompt: 'In that search, what guarantees that the loop terminates?',
       choices: [
         { id: 'a', label: 'The array is finite.' },
         { id: 'b', label: 'The interval strictly shrinks each iteration and cannot go below empty.' },
@@ -121,12 +117,6 @@ export const binarySearch: Pack = {
       { sub: 'bs-bounds', label: 'Explains why the bounds move to $mid \\pm 1$' },
       { sub: 'bs-term', label: 'Argues termination from the shrinking interval' },
     ],
-    samples: {
-      complete:
-        'I keep an interval $a[lo..hi]$ and the invariant that the target, if it is in the array, is inside it. I compare with the middle: if it is smaller I move $lo$ to $mid+1$, if larger I move $hi$ to $mid-1$. The interval shrinks every time, so the loop ends, and if it ends empty the invariant says the target is not there.',
-      partial: 'I look at the middle element and throw away the half that cannot contain the target, repeating until I find it or run out of elements.',
-      offtrack: 'I scan the array from the left until I find the target, which is fast enough because the array is sorted.',
-    },
     feedback: {
       complete: {
         covered: ['Invariant stated for $a[lo..hi]$', 'Bounds move past $mid$', 'Termination from a shrinking interval'],
@@ -144,7 +134,6 @@ export const binarySearch: Pack = {
         next: 'Rewrite using an interval and an invariant, then continue.',
       },
     },
-    transcript: 'I keep an interval and the invariant that the target is in it if it exists. I compare with the middle element and cut the interval on one side.',
   },
   work: {
     minutes: 10,
@@ -189,22 +178,6 @@ export const binarySearch: Pack = {
       ],
       solution: ['Here is the full solution. Read it, close it, and re-derive each line. The check afterwards will not show it.'],
     },
-    attempt:
-      'def search(a, t):\n    lo, hi = 0, len(a) - 1\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if a[mid] < t:\n            lo = mid\n        else:\n            hi = mid\n    return lo if a[lo] == t else -1',
-  },
-  sheet: {
-    summary: 'Orientation only. This feedback does not count as a demonstration of understanding.',
-    solution:
-      'def search(a, t):\n    lo, hi = 0, len(a) - 1\n    while lo < hi:\n        mid = (lo + hi) // 2\n        if a[mid] < t:\n            lo = mid\n        else:\n            hi = mid\n    return lo if a[lo] == t else -1',
-    annotations: [
-      { line: 3, kind: 'note', text: 'With `lo < hi` the interval can end with one element left. Check that the invariant still covers it.' },
-      { line: 6, kind: 'issue', text: '`lo = mid` does not shrink the interval when `hi = lo + 1`, so the loop can run forever.' },
-      { line: 10, kind: 'ok', text: 'Checking `a[lo] == t` at the end is the right way to finish this variant.' },
-    ],
-  },
-  elsewhere: {
-    solution:
-      'def search(a, t):\n    lo, hi = 0, len(a) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if a[mid] == t:\n            return mid\n        if a[mid] < t:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1',
   },
   twin: {
     title: 'First index at least $t$',
@@ -232,10 +205,29 @@ export const binarySearch: Pack = {
       },
     ],
     target: ['bs-inv', 'bs-bounds'],
-    sample: {
+  },
+  /** Prepared text for the “Fill sample” chips. Each sample matches the feedback written for it. */
+  sampleAnswers: {
+    message: 'I want to cut the array in half each time, but I am not sure what stays true about the interval.',
+    explain: {
+      complete:
+        'I keep an interval $a[lo..hi]$ and the invariant that the target, if it is in the array, is inside it. I compare with the middle: if it is smaller I move $lo$ to $mid+1$, if larger I move $hi$ to $mid-1$. The interval shrinks every time, so the loop ends, and if it ends empty the invariant says the target is not there.',
+      partial: 'I look at the middle element and throw away the half that cannot contain the target, repeating until I find it or run out of elements.',
+      offtrack: 'I scan the array from the left until I find the target, which is fast enough because the array is sorted.',
+    },
+    similar: {
       complete: 'The invariant is that the answer is in $[lo, hi]$. If $a[mid] < t$ then $lo = mid+1$; otherwise $mid$ may be the answer, so $hi = mid$. The interval shrinks, and at $lo = hi$ that index is the answer.',
       partial: 'It is like binary search, but I keep $mid$ when $a[mid] \\ge t$ because it might be the first one.',
       offtrack: 'I would scan from the left until I find the first value that is at least $t$.',
+    },
+    elsewhere:
+      'def search(a, t):\n    lo, hi = 0, len(a) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if a[mid] == t:\n            return mid\n        if a[mid] < t:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1',
+    why: {
+      'bs-c1': 'When hi is lo + 1, mid equals lo, so setting lo to mid changes nothing and the interval never shrinks.',
+      'bs-c2': 'An invariant has to hold before the first iteration and after every iteration. That is what makes the final state meaningful.',
+      'bs-d1': 'It does not work because at the start the interval is the whole array, so if the target is present it is inside.',
+      'bs-d2': 'It does not work because the array is sorted, so everything at or left of mid is also smaller than the target.',
+      'bs-d3': 'It does not work because an empty interval that would contain the target if it existed means the target is not there, so the loop returns -1.',
     },
   },
 }

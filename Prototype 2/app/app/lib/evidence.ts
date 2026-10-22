@@ -75,7 +75,7 @@ export function mixedLabel(states: EvidenceState[]) {
   if (t.demonstrated) parts.push(`${t.demonstrated} demonstrated`)
   if (t.partial) parts.push(`${t.partial} partial`)
   if (t.gap) parts.push(`${t.gap} gap`)
-  if (t.unverified) parts.push(`${t.unverified} unverified`)
+  if (t.unverified) parts.push(`${t.unverified} not shown`)
   return parts.join(' · ')
 }
 
@@ -93,13 +93,13 @@ export const stateLabel: Record<EvidenceState, string> = {
   demonstrated: 'Demonstrated in check',
   partial: 'Partial',
   gap: 'Gap observed',
-  unverified: 'Unverified',
+  unverified: 'Not shown yet',
 }
 export const stateShort: Record<EvidenceState, string> = {
   demonstrated: 'Demonstrated',
   partial: 'Partial',
   gap: 'Gap',
-  unverified: 'Unverified',
+  unverified: 'Not shown',
 }
 export const conditionLabel: Record<Condition, string> = {
   independent: 'Independent',

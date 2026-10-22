@@ -23,7 +23,7 @@ function skip(_: Confidence | null, later: boolean) { markSkipped('mistakes', la
 
 <template>
   <div>
-    <StageHeader title="One of these steps is wrong" description="Read the solution below. Pick the faulty step, then say why it fails." next="The post-quiz." />
+    <StageHeader title="One of these steps is wrong" description="Pick the wrong step, then say why." />
 
     <div class="space-y-8">
       <div class="flex items-center justify-between gap-4">
@@ -53,7 +53,6 @@ function skip(_: Confidence | null, later: boolean) { markSkipped('mistakes', la
               <span class="flex-1 text-base leading-7"><RichText :text="w.label" /></span>
             </label>
           </UiRadioGroup>
-          <div v-if="!m.submitted" class="space-y-2"><UiLabel for="m-text">In your own words <span class="text-muted-foreground font-normal">Optional</span></UiLabel><UiTextarea id="m-text" v-model="m.text" rows="2" placeholder="A correct version would be…" /></div>
         </div>
       </Transition>
 
@@ -71,10 +70,10 @@ function skip(_: Confidence | null, later: boolean) { markSkipped('mistakes', la
           </p>
           <p class="text-base leading-7"><RichText :text="mk.explanation" /></p>
         </div>
-        <div class="flex justify-end"><UiButton size="lg" @click="finish">Continue to the post-quiz <ArrowRight /></UiButton></div>
+        <div class="flex justify-end"><UiButton size="lg" @click="finish">Continue to the final quiz <ArrowRight /></UiButton></div>
       </Reveal>
     </div>
 
-    <SkipDialog v-model:open="skipOpen" title="Skip this check?" consequence="Whether you can find planted errors stays unverified." @confirm="skip" />
+    <SkipDialog v-model:open="skipOpen" title="Skip this check?" consequence="This check will not be shown." @confirm="skip" />
   </div>
 </template>

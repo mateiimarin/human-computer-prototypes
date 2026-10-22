@@ -1,32 +1,30 @@
 <script setup lang="ts">
 import { Check, ChevronRight, Info, NotebookPen, ExternalLink, FastForward } from '@lucide/vue'
-import { packOf } from '~/lib/session'
 
 definePageMeta({ layout: 'session', middleware: 'session' })
 useStep('route')
 const { ws } = useWorkspace()
 const { go } = useSession()
 const s = computed(() => ws.value.active!)
-const pack = computed(() => packOf(s.value))
 const bypass = ref(false)
 
-function work() { s.value.route = 'work'; go(pack.value.recall && !s.value.recall.done ? 'recall' : 'work') }
+function work() { s.value.route = 'work'; go('work') }
 function away() { s.value.route = 'elsewhere'; go('elsewhere') }
 function doBypass() { s.value.route = 'bypass'; bypass.value = false; go('explain') }
 
 const options = computed(() => [
-  { key: 'work', icon: NotebookPen, tint: 'bg-assist text-assist-foreground', title: 'Work on it here', text: 'Questions, hints and an outline from the companion. You choose how much help.', act: work },
-  { key: 'away', icon: ExternalLink, tint: 'bg-check text-check-foreground', title: 'I’m working on it elsewhere', text: 'Take the exercise with you, then come back with your solution.', act: away },
-  { key: 'bypass', icon: FastForward, tint: 'bg-partial text-partial-foreground', title: 'I’ve already done it', text: 'Go straight to the check. We’ll confirm what that skips.', act: () => (bypass.value = true) },
+  { key: 'work', icon: NotebookPen, tint: 'bg-assist text-assist-foreground', title: 'Work on it here', text: 'Get a question, hint, outline or solution.', act: work },
+  { key: 'away', icon: ExternalLink, tint: 'bg-check text-check-foreground', title: 'I’m working on it elsewhere', text: 'Come back with your solution.', act: away },
+  { key: 'bypass', icon: FastForward, tint: 'bg-partial text-partial-foreground', title: 'I’ve already done it', text: 'Go straight to the check.', act: () => (bypass.value = true) },
 ])
 </script>
 
 <template>
   <div>
-    <StageHeader title="How do you want to work on this?" description="Whichever you choose, you finish with the same check, with your references hidden." />
+    <StageHeader title="How do you want to work on this?" />
 
-    <p v-if="s.pre.submitted" class="text-muted-foreground mb-6 flex items-center gap-2 text-sm"><Check class="text-demonstrated-foreground size-4" :stroke-width="2.6" /> Baseline saved. Your answers stay hidden until the check.</p>
-    <p v-else-if="s.pre.skipped" class="text-muted-foreground mb-6 flex items-center gap-2 text-sm"><Info class="size-4" /> {{ s.deferred.includes('pre') ? 'You postponed the baseline' : 'You skipped the baseline' }}, so results will say a baseline comparison is unavailable.</p>
+    <p v-if="s.pre.submitted" class="text-muted-foreground mb-6 flex items-center gap-2 text-sm"><Check class="text-demonstrated-foreground size-4" :stroke-width="2.6" /> Baseline saved.</p>
+    <p v-else-if="s.pre.skipped" class="text-muted-foreground mb-6 flex items-center gap-2 text-sm"><Info class="size-4" /> {{ s.deferred.includes('pre') ? 'Baseline postponed.' : 'Baseline skipped.' }}</p>
 
     <ul class="divide-border border-border divide-y border-y">
       <Reveal v-for="(o, i) in options" :key="o.key" as="li" :index="i">
@@ -42,10 +40,7 @@ const options = computed(() => [
       <UiAlertDialogContent class="max-w-md">
         <UiAlertDialogHeader>
           <UiAlertDialogTitle>Go straight to the check?</UiAlertDialogTitle>
-          <UiAlertDialogDescription class="space-y-3 leading-6">
-            <span class="block">This skips the Work stage: the conversation, hints and sheet feedback. The check still runs with every reference hidden, and skipping Work doesn’t count as understanding.</span>
-            <span class="block">Because you finished the exercise before your baseline, that baseline is a starting snapshot, not a measure of what this session taught you.</span>
-          </UiAlertDialogDescription>
+          <UiAlertDialogDescription>This skips working here. The check still hides your references.</UiAlertDialogDescription>
         </UiAlertDialogHeader>
         <UiAlertDialogFooter class="gap-2">
           <UiAlertDialogCancel as-child><UiButton variant="ghost">Back</UiButton></UiAlertDialogCancel>

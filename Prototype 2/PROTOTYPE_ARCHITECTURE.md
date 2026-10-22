@@ -4,12 +4,12 @@ We are building a visual, interactive demo web app for a Human Computer Interact
 
 **Course:** Human Computer Interaction, Milestone 2  
 **Prototype:** 2 — Prove-it companion  
-**Updated:** 20 October 2026  
+**Updated:** 22 October 2026  
 **Deliverable:** An interactive web prototype with simulated learning content and outcomes.
 
 This document defines the app's information architecture, user journeys, screen responsibilities, and interaction rules. It is a working reference for building the prototype, rather than a visual design specification or an implementation plan. Colours, typography, page layouts, branding, and detailed animation choices remain open.
 
-The agreed scope is **a short core path with optional deeper checks**. Every step in the supplied user-flow diagram remains reachable, without requiring every student to complete the entire sequence.
+The agreed scope is **a short core path with optional deeper checks**. Sections 1–12 describe the full design; **§13 records the 22 October simplification and marks what it replaces**. Every step in the supplied user-flow diagram remains reachable, without requiring every student to complete the entire sequence.
 
 ## 1. Product intent and research basis
 
@@ -465,3 +465,41 @@ The diagrams and ideation are source material, not implementation instructions. 
 | Original I16 is a spoken check-in, while this prototype uses speech for explain-it-back. | Treat speaking as an optional input method for the post-work explanation. |
 
 Visual styling, detailed layouts, production assessment rules, and implementation/deployment steps can be specified separately after this structure is reviewed.
+
+## 13. Simplified lo-fi version (22 October 2026)
+
+Reviewers judge whether the **flow** answers the needs from the interviews, not whether this is a complete study app. Every screen,
+control and text block was checked against two questions: is it on the core flow, and does a reviewer need it to judge the flow?
+The element-by-element audit is in `app/docs/SIMPLIFICATION.md`. Where a rule below replaces an earlier one, the earlier rule is named.
+
+### How the content is organised
+
+| Level | What it is | Example |
+| --- | --- | --- |
+| **Topic** | A part of the course | Dynamic programming |
+| **Concept** | A standard, named thing in a topic, shared by every exercise that checks it | State · Recurrence · Base cases · Optimal substructure |
+| **Exercise** | A problem from a sheet; it checks three concepts of its topic | Maximum subarray |
+| **Question** | One multiple-choice item, tagged with one concept | “How is $D_i$ computed from the previous state?” |
+
+In the code a concept is still called `sub`, and a topic `topicId`.
+
+| ID | Rule |
+| --- | --- |
+| G32 | **Structure.** Content is organised as topic → concept, and exercise and question point at concepts (table above). Concepts have standard names and no descriptions, so they can be learned and so a course can grow by adding rows. What a student shows is collected **per concept**, whichever exercise it came from. Lists show names and one status; dates, counters and descriptions appear only inside the answers sheet. **Replaces** the per-exercise “sub-concepts” of §7 and G26. |
+| G33 | **Two destinations: Exercises and Concepts.** Exercises lists the exercises grouped by topic, each with its three concept names, a ring, a status and one button (**Start** or **Resume**, one click, no page in between), plus **Start over** with a confirmation when the exercise is open. Concepts shows one line (“N questions to answer again”, one button) and the topics with their concepts, each with a status; a row opens the answers behind it with **Practise this concept**. A topic can be collapsed. **Replaces** the four destinations of §3, G18, G19, G22, G29, G30 and G31 (no sign-in, settings, courses, upload, sidebar, search, filters, export, exam plan or weekly review). |
+| G34 | **Nothing is stored.** State lives in memory; a refresh returns everything to the seeded start (earlier sessions and missed questions, so Concepts is not empty). Each exercise keeps its own open session during a visit. A session screen without an open session leads to the exercise list with a short note. **Replaces** the persistence rule of §8 (“Back, leave, and resume”). |
+| G35 | **The baseline is self-contained.** Each question names the exercise's setting before it asks, so it reads in context. The baseline and the Work chat keep their screens and interaction. |
+| G36 | **Core path.** Exercise → baseline (3 questions, results hidden) → how to work (work here, elsewhere, or already done) → Work → Check (explain it back, then optionally **one** extra check: “Why does it work?” or “Find the mistake”) → final quiz → summary → a similar problem when a concept shows a gap. The recall step and the Speak input are removed. **Replaces** §5.1, §5.3 (recall) and §5.4 (speaking). |
+| G37 | **Summary.** Headline and ring, results by concept (a row opens its answers), one next action (similar problem, practise, finish a skipped check, or just back to exercises), the before/after table and the claims. Missed questions are added to Concepts automatically. Export and the save sheet are removed. **Replaces** §5.7 (saving and export). |
+| G38 | **Wording.** One word per thing: topic, concept, exercise, question. Stage names are Prepare · Work · **Check** · **Summary** (not Verify · Review), so “Review” is not used for two things. “Twin problem” is “Similar problem”, “post-quiz” is “final quiz”. No taglines, reassurance, overline tags or “prepared”/“sample” labels in the product. Buttons name the action. **Replaces** the stage names of §1 and G17's wording. |
+| G39 | **Fill sample.** Every free-text input shows a dashed chip with a purple TEST tag and the text “Fill sample” on its top edge while the input is focused, with no fade, a small scale-up on hover only, and `aria-label="Fill sample text: <input>"`. It fills that input with text written for the exercise (`sampleAnswers`) that matches the prepared feedback. Explanations: the first sample leaves a gap (and links to an earlier occurrence where one exists), the sample after “Edit and submit again” is complete. A facilitator can fix one outcome with ⌘K. Choice questions have no chip. |
+| G40 | **About this prototype.** A dialog opens on every page load and from the header button. It says in one sentence what the prototype is, what to expect (no AI; replies and feedback are written in advance and do not react to input; judge the flow), shows the chip and how it works, and lists the needs it addresses, each with how, and “Partly” where it falls short: N1 friction during problem-solving (partly: before and after working, not during), N2 telling what you understood from what you followed, N3 own attempt first (partly), N4 staged help instead of the full solution (partly), N5 checking afterwards and optional self-testing. |
+| G41 | **Facilitator tool.** ⌘K or Ctrl+K opens a palette that jumps to an exercise and chooses the outcome the sample text produces. It is not linked from the interface. |
+
+**Deferred (kept as ideas, not in this prototype):** spoken explanation (I16), recall of a past problem (I29), exam planning and
+weekly review (I26/I28), question export, adding courses and sheets, a dependency map (I18), settings and reminders.
+
+**Left unchanged and reported:** the skip dialog shared with the baseline has a confidence picker that no screen reads. It is
+part of the protected baseline screen, so it stays until the team decides.
+
+**Third round (22 October, after review):** G42 One status, **Not shown**, covers both “no check yet” and “unverified”. G43 No “Next:” lines and no explanatory paragraphs; a screen has a title and at most one short line. G44 The summary reads top to bottom: headline and ring, concepts, baseline and final quiz (with confidence before → after), true or false, what to do next. G45 The Work chat has no “+” menu, paste, upload or sheet notes (deferred, I17); **Check my understanding** sits next to the help buttons. G46 Exercises has a course selector with the one course. G45 replaces the sheet-feedback entries in §4 and §5.3.

@@ -1,45 +1,45 @@
-# Prove-it
+# Prove-it (Prototype 2)
 
-A study workspace that helps students tell what they can explain on their own from what they could only follow with help.
-**Prepare → Work → Verify → Review.**
+A low-fidelity prototype of one learning flow: work on an exercise, then check what you can explain without help.
+Nothing is connected: feedback, scores and replies are written in advance (`app/data/packs`) and do not react to what you type.
+State lives in memory only, so a refresh starts again.
 
-Nuxt 4 · Vue 3 · TypeScript · Tailwind v4 · shadcn/vue (with its message, bubble, questionnaire, code-block, sidebar,
-calendar and command components) · motion-v · KaTeX · Shiki.
-
-State lives in the browser (`localStorage`, key `prove-it:workspace:v1`). Feedback and scoring come from authored content in
-`app/data/packs`, so every screen agrees with every other.
+Nuxt 4 · Vue 3 · TypeScript · Tailwind v4 · shadcn/vue · motion-v · KaTeX · Shiki.
 
 ## Run
 
 ```sh
 npm install
 npm run dev          # http://127.0.0.1:3002
-npm test             # evidence rules (Vitest)
-npm run test:e2e     # core journeys (Playwright, system Chrome)
+npm test             # unit tests (Vitest)
+npm run test:e2e     # walkthroughs (Playwright, system Chrome)
 npm run typecheck
+npm run build
 ```
 
-## Where things are
+## What is in it
 
-| Area | Screens |
+| Where | What |
 | --- | --- |
-| Sign in | `/sign-in` |
-| Overview | `/` next action, concept status, due review, recent sessions, first-use state for new courses |
-| Study | `/study` topics, sheets, add a sheet (file, paste or sample, with a read step and a failure state) |
-| Session | `/session/pre-quiz` → `route` → `recall` / `work` / `elsewhere` / `sheet` → `explain` → `defend` / `mistakes` → `post-quiz` → `summary` → `twin` |
-| Concepts | `/concepts`, `/concepts/:id`, evidence sheet for every status |
-| Review | `/review` library, due and exam plan; `/review/session` for the question flow |
-| Settings | `/settings` |
+| `/` Exercises | Exercises by topic. **Start** or **Resume** in one click, **Start over** with a confirmation. |
+| `/session/*` | Baseline → how to work → Work → Check (explain it back, one optional extra check) → final quiz → summary → similar problem |
+| `/concepts` | Topics and their concepts, each with a status. A row opens the answers behind it. Questions to answer again. |
+| `/practice` | A short round of questions without help |
+| About this prototype | Opens on every load, and from the header |
 
-## Walkthroughs worth trying
+Content is organised as topic → concept, with exercises and questions pointing at concepts (`app/data/catalog.ts`).
 
-- **Core:** Study → Maximum subarray → baseline → Work (hint, outline) → check → explain it back → post-quiz → summary → twin problem.
-- **Work already complete:** route screen → “I’ve already done this” → confirm → check. The summary calls the baseline a starting snapshot.
-- **Assisted:** during any check choose “Show references”. The check becomes assisted and cannot produce a green result.
-- **Skip or postpone:** skip the baseline, explain it back or post-quiz, or choose “Do this later”. The summary marks them unverified (or postponed) and offers a way back.
-- **Repeat mistake:** Study → Maximum subarray → “I’ve already done it” → fill in “A partial explanation”. The feedback links the gap to the earlier loop-invariant gap.
-- **Resume:** the seeded Coin change session is open at Work. Leave and resume from the sidebar.
-- **Review and exam plan:** Review → Due → start; Review → Exam plan → switch a topic off.
-- **First use:** switch to Discrete Probability from the course menu.
+## For facilitators
 
-Settings → Reset workspace returns everything to the starting state.
+- **Fill sample:** click into any text box; a dashed “Fill sample” chip appears on its top edge. It fills that box with prepared text.
+  For an explanation the first sample leaves a gap, and after “Edit and submit again” the next one is complete.
+- **⌘K (Ctrl+K):** jump to an exercise, or fix which outcome the sample text gives. It is not shown in the interface.
+- **Paths worth showing:** core path with the chips only; “I’ve already done it” and the repeat-mistake link on the first sample of
+  Maximum subarray; skipping or postponing a check; “Show references” in a check (it becomes assisted); “Find the mistake”;
+  the similar problem after a gap; Concepts → a concept → Practise.
+
+## Layout of the code
+
+`app/data/catalog.ts` (topics, concepts) · `app/data/packs/*` (exercises, questions, feedback, sample text) ·
+`app/lib/evidence.ts` (how answers become a status; only independent answers can show a concept) · `app/lib/session.ts` ·
+`app/composables/*` (state) · `app/pages`, `app/components`, `app/layouts` · `docs/` (audit, notes).

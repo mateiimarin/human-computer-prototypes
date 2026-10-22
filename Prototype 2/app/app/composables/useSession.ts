@@ -1,6 +1,6 @@
 import { packs } from '~/data/packs'
 import type { ActiveSession, CheckId, StepId } from '~/data/session'
-import type { Pack } from '~/data/types'
+import type { EvidenceState, Pack } from '~/data/types'
 import { blankSession, buildEntries, buildTwinEntries, packOf, resumePath } from '~/lib/session'
 import { fmtTime } from '~/lib/format'
 
@@ -17,15 +17,22 @@ export function useSession() {
     return { s: ws.value.active!, p: packOf(ws.value.active!) }
   }
 
-  function start(packId: string, mode: 'full' | 'twin' = 'full') {
-    ws.value.active = blankSession(packs[packId]!, w.course.value.id, mode)
-    ws.value.active.work.help = ws.value.settings.defaultHelp
-    return navigateTo(resumePath(ws.value.active))
+  /** Start an exercise, or resume it where it was left. One click from the list, no page in between. */
+  function open(packId: string) {
+    const s = (ws.value.open[packId] ??= blankSession(packs[packId]!))
+    ws.value.active = s
+    return navigateTo(resumePath(s))
+  }
+
+  /** Forget an exercise's open session, so it starts again from the baseline. */
+  function startOver(packId: string) {
+    delete ws.value.open[packId]
+    if (ws.value.active?.packId === packId) ws.value.active = null
   }
 
   function go(step: StepId) {
     const s = ws.value.active
-    if (!s) return navigateTo('/study')
+    if (!s) return navigateTo('/')
     s.step = step
     return navigateTo(resumePath(s))
   }
@@ -65,32 +72,30 @@ export function useSession() {
     })
   }
 
+  /** Close the session: it moves to the past sessions and the exercise can be started again. */
   function finish() {
     const s = ws.value.active
     if (!s) return
     const p = packOf(s)
-    if (s.mode === 'full' && s.post.submitted || s.post.skipped) {
+    if (s.post.submitted || s.post.skipped) {
       const last = ws.value.entries.filter(e => e.sessionId === s.id && e.source === 'session')
-      const bySub: Record<string, any> = {}
+      const bySub: Record<string, EvidenceState> = {}
       for (const e of last) bySub[e.sub] = e.state
-      const assisted = s.assisted.length > 0
       w.archiveSession({
-        id: s.id, packId: s.packId, courseId: s.courseId, title: p.title, mode: 'full',
-        condition: assisted ? (s.assisted.length === 5 ? 'assisted' : 'mixed') : 'independent',
+        id: s.id, packId: s.packId, title: p.title,
+        condition: s.assisted.length === 0 ? 'independent' : s.assisted.length === 5 ? 'assisted' : 'mixed',
         line: sessionLine(bySub, p), bySub,
       })
     }
+    delete ws.value.open[s.packId]
     ws.value.active = null
   }
 
-  function discard() { ws.value.active = null }
-
-  return { w, session, pack, need, start, go, markAssisted, markSkipped, commit, commitTwin, finish, discard }
+  return { w, session, pack, need, open, startOver, go, markAssisted, markSkipped, commit, commitTwin, finish }
 }
 
 function sessionLine(bySub: Record<string, string>, p: Pack) {
-  const parts = p.subs.map(s => `${s.name} ${(bySub[s.id] ?? 'unverified').replace('demonstrated', 'demonstrated')}`)
-  return parts.join(' · ')
+  return p.subs.map(s => `${s.name} ${bySub[s.id] ?? 'unverified'}`).join(' · ')
 }
 
 /** Record which screen a session is on, so resume and the stage stepper always agree with what the student sees. */

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { X } from '@lucide/vue'
-const title = useState('focus-title', () => 'Review')
-const exit = useState<string>('focus-exit', () => '/review')
+const title = useState('focus-title', () => 'Practice')
+const exit = useState<string>('focus-exit', () => '/concepts')
 </script>
 
 <template>
@@ -12,6 +12,7 @@ const exit = useState<string>('focus-exit', () => '/review')
         <UiTooltipContent>Close</UiTooltipContent>
       </UiTooltip>
       <p class="text-sm font-medium">{{ title }}</p>
+      <div class="ml-auto"><AboutButton /></div>
     </header>
     <main id="main" tabindex="-1" class="mx-auto w-full max-w-[44rem] px-4 pt-8 pb-32 outline-none sm:px-8"><slot /></main>
   </div>

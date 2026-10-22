@@ -8,7 +8,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   components: [{ path: '~/components', pathPrefix: false, ignore: ['**/ui/**'] }],
   shadcn: { prefix: 'Ui', componentDir: './app/components/ui' },
-  colorMode: { classSuffix: '', preference: 'dark', fallback: 'dark', storageKey: 'prove-it:theme' },
+  colorMode: { classSuffix: '', preference: 'dark', fallback: 'dark', storage: 'sessionStorage', storageKey: 'prove-it:theme' },
   alias: { cn: decodeURIComponent(new URL('./app/lib/utils.ts', import.meta.url).pathname) },
   vite: {
     plugins: [tailwindcss()],
@@ -20,7 +20,7 @@ export default defineNuxtConfig({
       title: 'Prove-it',
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
       meta: [
-        { name: 'description', content: 'Study with help, then show what you can explain on your own.' },
+        { name: 'description', content: 'A low-fidelity prototype of one learning flow: work on an exercise, then check what you can explain without help.' },
         { name: 'theme-color', content: '#0e0e0e' },
       ],
     },

@@ -22,25 +22,21 @@ function idk() { a.value.idk = true; a.value.choice = null }
 function next() { last.value ? finish() : d.value.idx++ }
 function finish() {
   d.value.done = true
-  go(s.value.deeper.mistakes ? 'mistakes' : 'post-quiz')
+  go('post-quiz')
 }
-function skip(_: Confidence | null, later: boolean) { markSkipped('defend', later); skipOpen.value = false; go(s.value.deeper.mistakes ? 'mistakes' : 'post-quiz') }
+function skip(_: Confidence | null, later: boolean) { markSkipped('defend', later); skipOpen.value = false; go('post-quiz') }
 </script>
 
 <template>
   <div>
     <StageHeader
-      title="Why does it hold?" description="Short questions about the steps behind your solution. Finish whenever you like."
-      :next="s.deeper.mistakes ? 'Spot the planted mistake.' : 'The post-quiz.'"
+      title="Why does it work?" description="Three short questions about your solution."
     />
 
     <div class="space-y-8">
       <div class="flex items-center justify-between gap-4">
         <p class="text-muted-foreground text-sm tabular-nums" aria-live="polite">Question {{ d.idx + 1 }} of {{ pack.defend.length }}</p>
-        <div class="flex items-center gap-1">
-          <UiButton variant="ghost" size="sm" class="text-muted-foreground" @click="skipOpen = true">Skip this check</UiButton>
-          <UiButton variant="outline" size="sm" @click="finish">Finish</UiButton>
-        </div>
+        <UiButton variant="ghost" size="sm" class="text-muted-foreground -mr-3" @click="skipOpen = true">Skip this check</UiButton>
       </div>
 
       <Transition name="q-fwd" mode="out-in">
@@ -59,21 +55,23 @@ function skip(_: Confidence | null, later: boolean) { markSkipped('defend', late
           <Reveal v-else class="space-y-5">
             <div class="flex items-start gap-3 rounded-xl p-5" :class="ok ? 'bg-demonstrated' : 'bg-gap'">
               <component :is="ok ? Check : X" class="mt-0.5 size-5 shrink-0" :class="ok ? 'text-demonstrated-foreground' : 'text-gap-foreground'" />
-              <div class="space-y-1"><p class="text-sm font-medium" :class="ok ? 'text-demonstrated-foreground' : 'text-gap-foreground'">{{ ok ? 'That holds' : a.idk ? 'You weren’t sure' : 'That doesn’t hold' }}</p><p class="text-base leading-7"><RichText :text="q.why" /></p></div>
+              <div class="space-y-1"><p class="text-sm font-medium" :class="ok ? 'text-demonstrated-foreground' : 'text-gap-foreground'">{{ ok ? 'That holds' : a.idk ? 'You were not sure' : 'That does not hold' }}</p><p class="text-base leading-7"><RichText :text="q.why" /></p></div>
             </div>
             <div v-if="!ok" class="space-y-2">
-              <UiLabel :for="`mistake-${q.id}`">Explain your mistake <span class="text-muted-foreground font-normal">Why doesn’t that reasoning work? Optional</span></UiLabel>
-              <UiTextarea :id="`mistake-${q.id}`" :model-value="d.own[q.id] ?? ''" rows="3" placeholder="It doesn’t work because…" @update:model-value="(v) => (d.own[q.id] = String(v))" />
+              <UiLabel :for="`mistake-${q.id}`">Explain your mistake <span class="text-muted-foreground font-normal">Why does that reasoning not work? Optional</span></UiLabel>
+              <SampleInput label="Explain your mistake" @fill="d.own[q.id] = pack.sampleAnswers.why[q.id] ?? ''">
+                <UiTextarea :id="`mistake-${q.id}`" :model-value="d.own[q.id] ?? ''" rows="3" placeholder="It does not work because…" @update:model-value="(v) => (d.own[q.id] = String(v))" />
+              </SampleInput>
             </div>
             <div class="flex items-center justify-between gap-3">
               <ConfidenceTag :confidence="a.confidence" />
-              <UiButton size="lg" @click="next">{{ last ? 'Finish defence' : 'Next question' }} <ArrowRight /></UiButton>
+              <UiButton size="lg" @click="next">{{ last ? 'Continue to the final quiz' : 'Next question' }} <ArrowRight /></UiButton>
             </div>
           </Reveal>
         </div>
       </Transition>
     </div>
 
-    <SkipDialog v-model:open="skipOpen" title="Skip defend your solution?" consequence="Your answers to these questions will stay unverified." @confirm="skip" />
+    <SkipDialog v-model:open="skipOpen" title="Skip these questions?" consequence="These questions will not be shown." @confirm="skip" />
   </div>
 </template>

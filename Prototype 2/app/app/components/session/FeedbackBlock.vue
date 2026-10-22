@@ -14,7 +14,7 @@ const earlierName = computed(() => {
 const where = computed(() => {
   const e = props.repeat?.entry
   if (!e) return ''
-  return e.source === 'review' ? 'a review' : e.source === 'twin' ? 'a twin problem' : e.title
+  return e.source === 'review' ? 'a practice round' : e.source === 'twin' ? 'a similar problem' : e.title
 })
 </script>
 
@@ -28,7 +28,7 @@ const where = computed(() => {
           <RichText :text="c" />
         </Reveal>
       </ul>
-      <p v-else class="text-muted-foreground text-base leading-7">None of the points this exercise checks were covered yet.</p>
+      <p v-else class="text-muted-foreground text-base leading-7">None of the concepts this exercise checks were covered yet.</p>
     </div>
 
     <Reveal v-if="feedback.gap" :index="3" class="space-y-4">
@@ -42,7 +42,7 @@ const where = computed(() => {
           <span class="text-foreground font-medium">This has come up before.</span>
           On {{ fmtDate(repeat.entry.at) }}, in {{ where }}, you also showed a gap on “{{ earlierName }}”.
           <template v-if="repeat.text">{{ repeat.text }}</template>
-          <button class="text-foreground ml-1 underline underline-offset-4" @click="evidence.open(repeat.entry.sub)">See that evidence</button>
+          <button class="text-foreground ml-1 underline underline-offset-4" @click="evidence.open(repeat.entry.sub)">See those answers</button>
         </p>
       </div>
     </Reveal>

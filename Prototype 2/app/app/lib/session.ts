@@ -10,30 +10,26 @@ export function emptyAnswers(qs: Question[]): Record<string, AnswerState> {
   return Object.fromEntries(qs.map(q => [q.id, emptyAnswer()]))
 }
 
-export function blankSession(pack: Pack, courseId: string, mode: 'full' | 'twin' = 'full'): ActiveSession {
+export function blankSession(pack: Pack): ActiveSession {
   return {
     id: uid('s'),
     packId: pack.id,
-    courseId,
-    mode,
     startedAt: new Date().toISOString(),
-    step: mode === 'twin' ? 'twin' : 'pre-quiz',
+    step: 'pre-quiz',
     pre: { answers: emptyAnswers(pack.quiz), submitted: false, skipped: false, at: null },
     route: null,
-    recall: { done: false, text: '', revealed: false },
     work: {
       messages: [{ id: uid('m'), role: 'companion', text: pack.work.opening }],
-      help: 'hints', hints: 0, questions: 0, draft: '', attempt: '',
+      help: 'hints', hints: 0, questions: 0, draft: '',
       blanks: {}, blanksChecked: false, revealed: false,
     },
     elsewhere: { left: false, solution: '', attached: false },
-    sheetViewed: false,
-    explain: { mode: 'type', text: '', voice: 'idle', confidence: null, submitted: false, sample: null, attempts: [] },
-    deeper: { defend: false, mistakes: false, chosen: false },
+    explain: { text: '', confidence: null, submitted: false, sample: null, attempts: [] },
+    deeper: { defend: false, mistakes: false },
     defend: { answers: emptyAnswers(pack.defend), own: {}, checked: [], idx: 0, done: false },
-    mistakes: { line: null, why: null, text: '', submitted: false, done: false },
+    mistakes: { line: null, why: null, submitted: false, done: false },
     post: { answers: emptyAnswers(pack.quiz), claims: emptyAnswers(pack.claims), submitted: false, skipped: false, at: null },
-    assisted: [], skipped: [], deferred: [], entryIds: [], savedNow: [],
+    assisted: [], skipped: [], deferred: [], entryIds: [],
     twin: { phase: 'intro', answers: emptyAnswers(pack.twin.task), text: '', sample: null, confidence: null, submitted: false, attempts: [] },
   }
 }
@@ -126,7 +122,7 @@ export function mistakesObs(pack: Pack, s: ActiveSession): Obs[] {
     sub: m.sub,
     signal: { sub: m.sub, result, condition: c },
     item: {
-      label: 'Spot the planted mistake',
+      label: 'Find the mistake',
       answer: passed(c) ? passedWord(c) : `Line ${(s.mistakes.line ?? -1) + 1}${lineOk ? ' (correct line)' : ''}`,
       verdict: passed(c) ? (c as 'skipped' | 'deferred') : c === 'assisted' ? 'assisted' : result,
       confidence: null,
@@ -148,7 +144,7 @@ export function allObs(pack: Pack, s: ActiveSession): Obs[] {
   return [...explainObs(pack, s), ...defendObs(pack, s), ...mistakesObs(pack, s), ...postObs(pack, s)]
 }
 
-/** Build one evidence entry per sub-concept from what the session has produced so far. */
+/** Build one evidence entry per concept from what the session has produced so far. */
 export function buildEntries(pack: Pack, s: ActiveSession, title: string, attempt = 1): EvidenceEntry[] {
   const obs = allObs(pack, s)
   const at = new Date().toISOString()
@@ -174,7 +170,7 @@ export function twinObs(pack: Pack, s: ActiveSession): Obs[] {
     out.push({
       sub,
       signal: { sub, result: sample === 'offtrack' ? 'incorrect' : sample === 'partial' ? 'partial' : 'correct', condition: cond },
-      item: { label: 'Twin problem: explain it independently', answer: sample === 'offtrack' ? 'Did not transfer' : sample === 'partial' ? 'Transferred in part' : 'Transferred', verdict: sample === 'offtrack' ? 'incorrect' : sample === 'partial' ? 'partial' : 'correct', confidence: s.twin.confidence, note: '' },
+      item: { label: 'Similar problem: explain it without help', answer: sample === 'offtrack' ? 'Did not carry over' : sample === 'partial' ? 'Carried over in part' : 'Carried over', verdict: sample === 'offtrack' ? 'incorrect' : sample === 'partial' ? 'partial' : 'correct', confidence: s.twin.confidence, note: '' },
     })
   })
   return out
@@ -186,7 +182,7 @@ export function buildTwinEntries(pack: Pack, s: ActiveSession, attempt: number):
   return pack.twin.target.map((sub) => {
     const mine = obs.filter(o => o.sub === sub)
     const { state, condition } = aggregate(mine.map(o => o.signal))
-    return { id: uid('e'), sub, at, state, condition, source: 'twin' as const, sessionId: s.id, title: `Twin problem · ${pack.twin.title.replace(/\$/g, '')}`, attempt, items: mine.map(o => o.item) }
+    return { id: uid('e'), sub, at, state, condition, source: 'twin' as const, sessionId: s.id, title: `Similar problem · ${pack.twin.title.replace(/\$/g, '')}`, attempt, items: mine.map(o => o.item) }
   })
 }
 
@@ -222,26 +218,26 @@ export function answeredCount(qs: Question[], answers: Record<string, AnswerStat
 /** Where a student should land when resuming. */
 export function resumePath(s: ActiveSession): string {
   const map: Record<StepId, string> = {
-    'pre-quiz': '/session/pre-quiz', baseline: '/session/route', route: '/session/route', recall: '/session/recall',
-    work: '/session/work', elsewhere: '/session/elsewhere', sheet: '/session/sheet', explain: '/session/explain',
-    deeper: '/session/explain', defend: '/session/defend', mistakes: '/session/mistakes',
+    'pre-quiz': '/session/pre-quiz', route: '/session/route',
+    work: '/session/work', elsewhere: '/session/elsewhere', explain: '/session/explain',
+    defend: '/session/defend', mistakes: '/session/mistakes',
     'post-quiz': '/session/post-quiz', summary: '/session/summary', twin: '/session/twin',
   }
   return map[s.step]
 }
 
-export type Stage = 'prepare' | 'work' | 'verify' | 'review'
-export const stages: { id: Stage; label: string; blurb: string }[] = [
-  { id: 'prepare', label: 'Prepare', blurb: 'A short baseline, with results hidden.' },
-  { id: 'work', label: 'Work', blurb: 'Solve it with the companion, or on your own.' },
-  { id: 'verify', label: 'Verify', blurb: 'Explain it back with every reference hidden.' },
-  { id: 'review', label: 'Review', blurb: 'See what you showed and what to do next.' },
+export type Stage = 'prepare' | 'work' | 'check' | 'summary'
+export const stages: { id: Stage; label: string }[] = [
+  { id: 'prepare', label: 'Prepare' },
+  { id: 'work', label: 'Work' },
+  { id: 'check', label: 'Check' },
+  { id: 'summary', label: 'Summary' },
 ]
 export function stageOf(step: StepId): Stage {
-  if (['pre-quiz', 'baseline', 'route'].includes(step)) return 'prepare'
-  if (['recall', 'work', 'elsewhere', 'sheet'].includes(step)) return 'work'
-  if (['explain', 'deeper', 'defend', 'mistakes', 'post-quiz'].includes(step)) return 'verify'
-  return 'review'
+  if (['pre-quiz', 'route'].includes(step)) return 'prepare'
+  if (['work', 'elsewhere'].includes(step)) return 'work'
+  if (['explain', 'defend', 'mistakes', 'post-quiz'].includes(step)) return 'check'
+  return 'summary'
 }
 export const stateOrder: EvidenceState[] = ['gap', 'partial', 'unverified', 'demonstrated']
 export type { Confidence }

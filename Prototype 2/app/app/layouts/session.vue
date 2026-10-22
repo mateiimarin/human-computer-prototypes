@@ -1,23 +1,29 @@
 <script setup lang="ts">
-import { X, PanelRight, MoreHorizontal, LogOut } from '@lucide/vue'
+import { ArrowLeft } from '@lucide/vue'
 import { packOf, stageOf, type Stage } from '~/lib/session'
+import { course } from '~/data/catalog'
 
-const { ws, course } = useWorkspace()
-const { open, panel } = useLeave()
+const { ws } = useWorkspace()
+const { finish } = useSession()
 const s = computed(() => ws.value.active)
 const pack = computed(() => (s.value ? packOf(s.value) : null))
 const stage = computed<Stage>(() => (s.value ? stageOf(s.value.step) : 'prepare'))
-const checking = computed(() => !!s.value && ['explain', 'deeper', 'defend', 'mistakes', 'post-quiz'].includes(s.value.step))
+const checking = computed(() => !!s.value && ['explain', 'defend', 'mistakes', 'post-quiz'].includes(s.value.step))
 const assisted = computed(() => {
   const x = s.value
   if (!x) return false
-  const map: Record<string, string> = { explain: 'explain', deeper: 'explain', defend: 'defend', mistakes: 'mistakes', 'post-quiz': 'post' }
+  const map: Record<string, string> = { explain: 'explain', defend: 'defend', mistakes: 'mistakes', 'post-quiz': 'post' }
   return x.assisted.includes(map[x.step] as any)
 })
-const skippedStages = computed<Stage[]>(() => (s.value && (s.value.skipped.length || s.value.assisted.length) ? ['verify'] : []))
+const skippedStages = computed<Stage[]>(() => (s.value && (s.value.skipped.length || s.value.assisted.length) ? ['check'] : []))
 const chat = computed(() => !!s.value && s.value.step === 'work')
+/** From the summary the session is over, so leaving closes it; anywhere else the progress is kept for Resume. */
+async function back() {
+  const done = s.value?.step === 'summary'
+  await navigateTo('/')
+  if (done) finish()
+}
 const wide = computed(() => !!s.value && s.value.step === 'summary')
-const panelOn = computed(() => !!s.value && !['summary'].includes(s.value.step) && !(s.value.step === 'twin' && s.value.twin.phase === 'result'))
 </script>
 
 <template>
@@ -26,9 +32,9 @@ const panelOn = computed(() => !!s.value && !['summary'].includes(s.value.step) 
       <div class="flex min-w-0 items-center gap-2">
         <UiTooltip>
           <UiTooltipTrigger as-child>
-            <UiButton variant="ghost" size="icon" class="rounded-lg" aria-label="Leave session" @click="open = true"><X /></UiButton>
+            <UiButton variant="ghost" size="icon" class="rounded-lg" aria-label="Back to exercises" @click="back"><ArrowLeft /></UiButton>
           </UiTooltipTrigger>
-          <UiTooltipContent>Leave session</UiTooltipContent>
+          <UiTooltipContent>Back to exercises. Your progress is kept.</UiTooltipContent>
         </UiTooltip>
         <div class="text-muted-foreground hidden min-w-0 items-center gap-2 text-sm lg:flex">
           <span class="max-w-40 truncate">{{ course.name }}</span><span aria-hidden="true">/</span>
@@ -36,21 +42,7 @@ const panelOn = computed(() => !!s.value && !['summary'].includes(s.value.step) 
         </div>
       </div>
       <SessionStepper :current="stage" :skipped="skippedStages" />
-      <div class="flex items-center justify-end gap-1">
-        <UiTooltip>
-          <UiTooltipTrigger as-child>
-            <UiButton variant="ghost" size="icon" class="rounded-lg xl:hidden" aria-label="Session details" @click="panel = true"><PanelRight /></UiButton>
-          </UiTooltipTrigger>
-          <UiTooltipContent>Session details</UiTooltipContent>
-        </UiTooltip>
-        <UiDropdownMenu>
-          <UiDropdownMenuTrigger as-child><UiButton variant="ghost" size="icon" class="rounded-lg" aria-label="More"><MoreHorizontal /></UiButton></UiDropdownMenuTrigger>
-          <UiDropdownMenuContent align="end" class="w-56 p-1.5">
-            <UiDropdownMenuItem class="h-10 gap-2" @select="open = true"><LogOut class="size-4" /> Leave and resume later</UiDropdownMenuItem>
-            <UiDropdownMenuItem class="h-10 gap-2" @select="navigateTo('/study')">Choose a different exercise</UiDropdownMenuItem>
-          </UiDropdownMenuContent>
-        </UiDropdownMenu>
-      </div>
+      <div class="flex items-center justify-end gap-1"><AboutButton /></div>
     </header>
 
     <CheckBanner v-if="checking" :assisted="assisted" class="mt-1" />
@@ -59,13 +51,8 @@ const panelOn = computed(() => !!s.value && !['summary'].includes(s.value.step) 
       <main id="main" tabindex="-1" class="mx-auto w-full min-w-0 outline-none" :class="[chat && 'h-full', wide ? 'max-w-[56rem]' : 'max-w-[44rem]']">
         <slot />
       </main>
-      <aside v-if="s && panelOn" class="sticky top-24 hidden h-fit w-72 shrink-0 xl:block"><SessionPanel /></aside>
     </div>
 
-    <UiSheet v-model:open="panel">
-      <UiSheetContent side="right" class="w-full max-w-sm p-6"><UiSheetHeader class="sr-only"><UiSheetTitle>Session details</UiSheetTitle><UiSheetDescription>Stage, checks and help level</UiSheetDescription></UiSheetHeader><div class="pt-8"><SessionPanel v-if="s" /></div></UiSheetContent>
-    </UiSheet>
-    <LeaveDialog />
     <ReferencesDialogs />
   </div>
 </template>

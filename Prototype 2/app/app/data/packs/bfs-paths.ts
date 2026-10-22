@@ -1,22 +1,18 @@
 import type { Pack } from '../types'
+import { concept } from '../catalog'
 
 export const bfsPaths: Pack = {
   id: 'bfs-paths',
   title: 'Shortest paths with BFS',
   sheetNo: '5.1',
   topicId: 'graphs',
-  conceptId: 'graphs',
   statement:
     'Given an unweighted graph $G = (V, E)$ and a start vertex $s$, compute the fewest edges from $s$ to every vertex, in $O(|V| + |E|)$ time.',
   example: 'In a path graph $s - a - b$ the distances are $0$, $1$ and $2$.',
-  subs: [
-    { id: 'bf-queue', name: 'Queue order', blurb: 'Why a FIFO queue visits vertices by distance.' },
-    { id: 'bf-visit', name: 'Marking visited', blurb: 'When a vertex counts as discovered.' },
-    { id: 'bf-short', name: 'Why the first visit is shortest', blurb: 'The argument for correctness.' },
-  ],
+  subs: [concept('bf-queue'), concept('bf-visit'), concept('bf-short')],
   quiz: [
     {
-      id: 'bf-q1', sub: 'bf-queue', prompt: 'Why does a FIFO queue give vertices in non-decreasing order of distance?',
+      id: 'bf-q1', sub: 'bf-queue', prompt: 'Breadth-first search (BFS) finds shortest paths in an unweighted graph. Why does its FIFO queue give vertices in non-decreasing order of distance?',
       choices: [
         { id: 'a', label: 'All vertices at distance $d$ are enqueued before any at distance $d+1$.' },
         { id: 'b', label: 'The queue always holds the vertex with the smallest label.' },
@@ -25,7 +21,7 @@ export const bfsPaths: Pack = {
       correct: 'a', why: 'Vertices at distance $d+1$ are only discovered while processing vertices at distance $d$, and the queue preserves that order.',
     },
     {
-      id: 'bf-q2', sub: 'bf-visit', prompt: 'When should a vertex be marked as visited?',
+      id: 'bf-q2', sub: 'bf-visit', prompt: 'In BFS, when should a vertex be marked as visited?',
       choices: [
         { id: 'a', label: 'When it is first discovered and enqueued, so it cannot be queued twice.' },
         { id: 'b', label: 'Only after all of its neighbours have been processed.' },
@@ -34,7 +30,7 @@ export const bfsPaths: Pack = {
       correct: 'a', why: 'Marking on discovery gives each vertex exactly one place in the queue and keeps the running time linear.',
     },
     {
-      id: 'bf-q3', sub: 'bf-short', prompt: 'Why is the first time BFS reaches $v$ along a shortest path?',
+      id: 'bf-q3', sub: 'bf-short', prompt: 'In BFS, why is the first time a vertex $v$ is reached along a shortest path?',
       choices: [
         { id: 'a', label: 'Because BFS picks the cheapest edge each time.' },
         { id: 'b', label: 'Paths are explored in order of length, so a shorter path would have found $v$ earlier.' },
@@ -114,12 +110,6 @@ export const bfsPaths: Pack = {
       { sub: 'bf-visit', label: 'Marks vertices when first discovered' },
       { sub: 'bf-short', label: 'Argues the first discovery is along a shortest path' },
     ],
-    samples: {
-      complete:
-        'I keep a queue and mark vertices when I first discover them. All vertices at distance $d$ are in the queue before any at $d+1$, so I explore level by level. A vertex is first found from a vertex one level closer, and no shorter path could have found it earlier.',
-      partial: 'I start at $s$, put its neighbours in a queue, and keep taking vertices from the queue, adding their new neighbours with distance plus one.',
-      offtrack: 'I would explore as deep as possible along each path and keep the shortest one found.',
-    },
     feedback: {
       complete: {
         covered: ['FIFO order gives level by level exploration', 'Visited marked on discovery', 'First discovery argued to be shortest'],
@@ -137,7 +127,6 @@ export const bfsPaths: Pack = {
         next: 'Rewrite around a queue and levels, then continue.',
       },
     },
-    transcript: 'I use a queue, mark vertices when I discover them, and set the distance to the parent plus one.',
   },
   work: {
     minutes: 11,
@@ -182,21 +171,6 @@ export const bfsPaths: Pack = {
       ],
       solution: ['Here is the full solution. Read it, close it, and re-derive each line. The check afterwards will not show it.'],
     },
-    attempt:
-      'def bfs(graph, s):\n    dist = {s: 0}\n    stack = [s]\n    while stack:\n        v = stack.pop()\n        for w in graph[v]:\n            if w not in dist:\n                dist[w] = dist[v] + 1\n                stack.append(w)\n    return dist',
-  },
-  sheet: {
-    summary: 'Orientation only. This feedback does not count as a demonstration of understanding.',
-    solution:
-      'def bfs(graph, s):\n    dist = {s: 0}\n    stack = [s]\n    while stack:\n        v = stack.pop()\n        for w in graph[v]:\n            if w not in dist:\n                dist[w] = dist[v] + 1\n                stack.append(w)\n    return dist',
-    annotations: [
-      { line: 3, kind: 'issue', text: 'A stack explores depth first. Distances may be recorded along long paths before short ones.' },
-      { line: 7, kind: 'ok', text: 'Marking on discovery (`w not in dist`) is exactly right.' },
-    ],
-  },
-  elsewhere: {
-    solution:
-      'from collections import deque\n\ndef bfs(graph, s):\n    dist = {s: 0}\n    queue = deque([s])\n    while queue:\n        v = queue.popleft()\n        for w in graph[v]:\n            if w not in dist:\n                dist[w] = dist[v] + 1\n                queue.append(w)\n    return dist',
   },
   twin: {
     title: 'Shortest path in a grid',
@@ -224,10 +198,29 @@ export const bfsPaths: Pack = {
       },
     ],
     target: ['bf-queue', 'bf-short'],
-    sample: {
+  },
+  /** Prepared text for the “Fill sample” chips. Each sample matches the feedback written for it. */
+  sampleAnswers: {
+    message: 'I would use a queue and add every neighbour I have not seen yet, but I am not sure why the first visit gives the shortest distance.',
+    explain: {
+      complete:
+        'I keep a queue and mark vertices when I first discover them. All vertices at distance $d$ are in the queue before any at $d+1$, so I explore level by level. A vertex is first found from a vertex one level closer, and no shorter path could have found it earlier.',
+      partial: 'I start at $s$, put its neighbours in a queue, and keep taking vertices from the queue, adding their new neighbours with distance plus one.',
+      offtrack: 'I would explore as deep as possible along each path and keep the shortest one found.',
+    },
+    similar: {
       complete: 'Cells are vertices and moves are edges with cost one. A queue processes cells by distance, I mark on discovery, and the first time I reach the target is along a shortest path.',
       partial: 'I run BFS from the top-left cell and count the steps until I reach the bottom-right cell.',
       offtrack: 'I would follow one path to the end and try again from the other side if it is blocked.',
+    },
+    elsewhere:
+      'from collections import deque\n\ndef bfs(graph, s):\n    dist = {s: 0}\n    queue = deque([s])\n    while queue:\n        v = queue.popleft()\n        for w in graph[v]:\n            if w not in dist:\n                dist[w] = dist[v] + 1\n                queue.append(w)\n    return dist',
+    why: {
+      'bf-c1': 'BFS counts edges, not weights. With positive weights a path with more edges can still be cheaper.',
+      'bf-c2': 'Each vertex is added to the queue once and each edge is looked at a constant number of times, so it is linear in vertices plus edges.',
+      'bf-d1': 'It does not work because a stack goes deep first, so a vertex can be reached along a long path before a short one.',
+      'bf-d2': 'It does not work because without the check a vertex could be added many times, and cycles would make the loop run forever.',
+      'bf-d3': 'It does not work because the new vertex is exactly one edge further than the vertex that discovered it, so its distance is that distance plus one.',
     },
   },
 }

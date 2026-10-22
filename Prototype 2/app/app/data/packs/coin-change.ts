@@ -1,22 +1,18 @@
 import type { Pack } from '../types'
+import { concept } from '../catalog'
 
 export const coinChange: Pack = {
   id: 'coin-change',
   title: 'Coin change, fewest coins',
   sheetNo: '4.2',
   topicId: 'dp',
-  conceptId: 'dp',
   statement:
     'You have coin values $c_1, \\dots, c_k$ with an unlimited supply of each. Find the **minimum number of coins** that add up to exactly $T$, or report that it is impossible.',
   example: 'With coins $\\{1, 3, 4\\}$ and $T = 6$ the answer is $2$, using $3 + 3$.',
-  subs: [
-    { id: 'cc-state', name: 'State definition', blurb: 'What $F(x)$ means and why it only needs smaller amounts.' },
-    { id: 'cc-trans', name: 'Transition over coins', blurb: 'Taking the minimum over every coin, not just the largest.' },
-    { id: 'cc-inf', name: 'Unreachable amounts', blurb: 'Base case $F(0)=0$ and using infinity for amounts that cannot be formed.' },
-  ],
+  subs: [concept('dp-state'), concept('dp-recurrence'), concept('dp-base')],
   quiz: [
     {
-      id: 'cc-q1', sub: 'cc-state', prompt: 'What does $F(x)$ represent?',
+      id: 'cc-q1', sub: 'dp-state', prompt: 'Coin change asks for the fewest coins that add up to a total. In the usual dynamic-programming solution, what does $F(x)$ represent?',
       choices: [
         { id: 'a', label: 'The number of different ways to form amount $x$.' },
         { id: 'b', label: 'The fewest coins whose values sum to exactly $x$.' },
@@ -26,7 +22,7 @@ export const coinChange: Pack = {
       why: '$F(x)$ is a minimum count for one exact amount. Counting ways is a different recurrence (with sums, not minima).',
     },
     {
-      id: 'cc-q2', sub: 'cc-trans', prompt: 'How is $F(x)$ computed from smaller amounts?',
+      id: 'cc-q2', sub: 'dp-recurrence', prompt: 'In that solution, how is $F(x)$ computed from smaller amounts?',
       choices: [
         { id: 'a', label: '$F(x) = F(x - c_{\\max}) + 1$, always taking the largest coin.' },
         { id: 'b', label: '$F(x) = \\min_c F(x - c)$ over all coins $c \\le x$.' },
@@ -36,7 +32,7 @@ export const coinChange: Pack = {
       why: 'Whichever coin you use last adds one to the count for the remainder. Trying every coin makes the minimum safe.',
     },
     {
-      id: 'cc-q3', sub: 'cc-inf', prompt: 'What value should $F(x)$ have when $x$ cannot be formed?',
+      id: 'cc-q3', sub: 'dp-base', prompt: 'In that solution, what value should $F(x)$ have when the amount $x$ cannot be formed?',
       choices: [
         { id: 'a', label: '$0$, since no coins are used.' },
         { id: 'b', label: '$\\infty$, a value that can never win a minimum.' },
@@ -48,14 +44,14 @@ export const coinChange: Pack = {
   ],
   claims: [
     {
-      id: 'cc-c1', sub: 'cc-trans', justify: true,
+      id: 'cc-c1', sub: 'dp-recurrence', justify: true,
       prompt: '“Always taking the largest coin that still fits gives the fewest coins.”',
       choices: [{ id: 'true', label: 'True.' }, { id: 'false', label: 'False. The largest coin can lead to more coins overall.' }],
       correct: 'false',
       why: 'With coins $\\{1, 3, 4\\}$ and $T = 6$, greedy gives $4+1+1$ (three coins) while $3+3$ uses two.',
     },
     {
-      id: 'cc-c2', sub: 'cc-inf', justify: true,
+      id: 'cc-c2', sub: 'dp-base', justify: true,
       prompt: '“$F(0) = 0$ is needed even though nobody asks for amount $0$.”',
       choices: [{ id: 'true', label: 'True. Every amount reduces to $0$ at the end.' }, { id: 'false', label: 'False.' }],
       correct: 'true',
@@ -64,7 +60,7 @@ export const coinChange: Pack = {
   ],
   defend: [
     {
-      id: 'cc-d1', sub: 'cc-trans',
+      id: 'cc-d1', sub: 'dp-recurrence',
       prompt: 'Why do you take the minimum over all coins instead of just one?',
       choices: [
         { id: 'a', label: 'The best last coin is not known in advance, so every option has to be tried.' },
@@ -75,7 +71,7 @@ export const coinChange: Pack = {
       why: 'The recurrence is correct only because it covers every possible last coin.',
     },
     {
-      id: 'cc-d2', sub: 'cc-state',
+      id: 'cc-d2', sub: 'dp-state',
       prompt: 'Why can $F(x)$ be computed from smaller amounts only?',
       choices: [
         { id: 'a', label: 'Each coin has positive value, so $x - c < x$.' },
@@ -86,7 +82,7 @@ export const coinChange: Pack = {
       why: 'Positive coin values guarantee that every remainder is strictly smaller, so no circular dependency.',
     },
     {
-      id: 'cc-d3', sub: 'cc-inf',
+      id: 'cc-d3', sub: 'dp-base',
       prompt: 'What goes wrong if impossible amounts are stored as $0$?',
       choices: [
         { id: 'a', label: 'Nothing, since $0$ means no coins.' },
@@ -114,22 +110,15 @@ export const coinChange: Pack = {
     ],
     correctWhy: 'a',
     explanation: 'The recurrence needs $1 + \\min_c F(x-c)$: the coin just used adds one to the count. Without it no count ever grows.',
-    sub: 'cc-trans',
+    sub: 'dp-recurrence',
   },
   explain: {
     prompt: 'Explain the approach, the key steps, and why they hold.',
     points: [
-      { sub: 'cc-state', label: 'Defines $F(x)$ as the fewest coins for exactly $x$' },
-      { sub: 'cc-trans', label: 'Takes $1 + \\min$ over every coin as the last coin' },
-      { sub: 'cc-inf', label: 'Handles $F(0)=0$ and unreachable amounts with $\\infty$' },
+      { sub: 'dp-state', label: 'Defines $F(x)$ as the fewest coins for exactly $x$' },
+      { sub: 'dp-recurrence', label: 'Takes $1 + \\min$ over every coin as the last coin' },
+      { sub: 'dp-base', label: 'Handles $F(0)=0$ and unreachable amounts with $\\infty$' },
     ],
-    samples: {
-      complete:
-        'I compute the fewest coins for every amount up to $T$. For an amount $x$ I try every coin as the last one: the count is one plus the count for what remains. I take the minimum. $F(0)$ is $0$, and amounts that cannot be formed are infinity so they never win a minimum.',
-      partial:
-        'I fill a table of the fewest coins for each amount. For each amount I try every coin and take the minimum of the counts for the remainders, plus one.',
-      offtrack: 'I would keep taking the biggest coin that fits until I reach $T$.',
-    },
     feedback: {
       complete: {
         covered: ['$F(x)$ defined as fewest coins for exactly $x$', 'Minimum over every last coin, plus one', 'Base case and infinity for impossible amounts'],
@@ -138,16 +127,15 @@ export const coinChange: Pack = {
       },
       partial: {
         covered: ['$F(x)$ defined as fewest coins for exactly $x$', 'Minimum over every last coin, plus one'],
-        gap: { sub: 'cc-inf', text: 'The base case and the value for impossible amounts are missing. Say what $F(0)$ is and what an unreachable remainder holds.' },
+        gap: { sub: 'dp-base', text: 'The base case and the value for impossible amounts are missing. Say what $F(0)$ is and what an unreachable remainder holds.' },
         next: 'Add the base case and the impossible-amount rule, then continue.',
       },
       offtrack: {
         covered: [],
-        gap: { sub: 'cc-trans', text: 'Taking the biggest coin is greedy and fails for some coin sets, e.g. $\\{1,3,4\\}$ with $T=6$. The recurrence has to try every coin.' },
+        gap: { sub: 'dp-recurrence', text: 'Taking the biggest coin is greedy and fails for some coin sets, e.g. $\\{1,3,4\\}$ with $T=6$. The recurrence has to try every coin.' },
         next: 'Rewrite around $F(x)$ and the minimum over all coins, then continue.',
       },
     },
-    transcript: 'For each amount I try every coin as the last coin, take the best of the smaller amounts, and add one. The table starts with zero coins for amount zero.',
   },
   work: {
     minutes: 14,
@@ -192,26 +180,6 @@ export const coinChange: Pack = {
       ],
       solution: ['Here is the full solution. Read it, close it, and re-derive each line. The check afterwards will not show it.'],
     },
-    attempt:
-      'def min_coins(coins, T):\n    count = 0\n    for c in sorted(coins, reverse=True):\n        while T >= c:\n            T -= c\n            count += 1\n    return count if T == 0 else -1',
-  },
-  sheet: {
-    summary: 'Orientation only. This feedback does not count as a demonstration of understanding.',
-    solution:
-      'def min_coins(coins, T):\n    count = 0\n    for c in sorted(coins, reverse=True):\n        while T >= c:\n            T -= c\n            count += 1\n    return count if T == 0 else -1',
-    annotations: [
-      { line: 3, kind: 'issue', text: 'Taking the largest coin first is greedy. For $\\{1,3,4\\}$ and $T=6$ it returns $3$ instead of $2$.' },
-      { line: 7, kind: 'note', text: 'The impossible case is only detected after the greedy pass, so it can report “impossible” when a solution exists.' },
-    ],
-  },
-  elsewhere: {
-    solution:
-      'def min_coins(coins, T):\n    INF = float("inf")\n    F = [0] + [INF] * T\n    for x in range(1, T + 1):\n        for c in coins:\n            if c <= x:\n                F[x] = min(F[x], 1 + F[x - c])\n    return F[T] if F[T] < INF else -1',
-  },
-  recall: {
-    packId: 'max-subarray',
-    prompt: 'On 8 Oct you worked on Maximum subarray. What was the state there, and what was the choice at each index?',
-    reveal: 'The state $D_i$ was the best sum ending at $i$. The choice was starting fresh at $a_i$ or extending $D_{i-1}$. Here the state is “fewest coins for exactly $x$” and the choice is the last coin.',
   },
   twin: {
     title: 'Minimum cost climbing stairs',
@@ -220,7 +188,7 @@ export const coinChange: Pack = {
     code: 'def min_cost(cost: list[int]) -> int:\n    a, b = cost[0], cost[1]\n    for i in range(2, len(cost)):\n        a, b = b, cost[i] + min(a, b)\n    return min(a, b)',
     task: [
       {
-        id: 'cc-t1', sub: 'cc-trans', prompt: 'Why does $G(i)$ take a minimum over two predecessors?',
+        id: 'cc-t1', sub: 'dp-recurrence', prompt: 'Why does $G(i)$ take a minimum over two predecessors?',
         choices: [
           { id: 'a', label: 'The best last move is unknown, so both are tried.' },
           { id: 'b', label: 'Stairs are always climbed two at a time.' },
@@ -229,7 +197,7 @@ export const coinChange: Pack = {
         correct: 'a', why: 'As with coins, the recurrence considers every possible last step.',
       },
       {
-        id: 'cc-t2', sub: 'cc-inf', prompt: 'Which value must the base cases $G(0)$ and $G(1)$ hold?',
+        id: 'cc-t2', sub: 'dp-base', prompt: 'Which value must the base cases $G(0)$ and $G(1)$ hold?',
         choices: [
           { id: 'a', label: 'Their own stair costs, because starting there is free.' },
           { id: 'b', label: '$\\infty$.' },
@@ -238,11 +206,31 @@ export const coinChange: Pack = {
         correct: 'a', why: 'Standing on stair 0 or 1 costs only that stair; the recurrence builds from those two values.',
       },
     ],
-    target: ['cc-trans', 'cc-inf'],
-    sample: {
+    target: ['dp-recurrence', 'dp-base'],
+  },
+  /** Prepared text for the “Fill sample” chips. Each sample matches the feedback written for it. */
+  sampleAnswers: {
+    message: 'I think greedy works: always take the largest coin that still fits.',
+    explain: {
+      complete:
+        'I compute the fewest coins for every amount up to $T$. For an amount $x$ I try every coin as the last one: the count is one plus the count for what remains. I take the minimum. $F(0)$ is $0$, and amounts that cannot be formed are infinity so they never win a minimum.',
+      partial:
+        'I fill a table of the fewest coins for each amount. For each amount I try every coin and take the minimum of the counts for the remainders, plus one.',
+      offtrack: 'I would keep taking the biggest coin that fits until I reach $T$.',
+    },
+    similar: {
       complete: 'The state is the cheapest cost of standing on stair $i$. I try both possible last moves, add the stair cost, and the first two stairs are base cases.',
       partial: 'It is like coin change. I compute the cheapest cost for each stair from the two before it.',
       offtrack: 'I would always take the cheaper of the next two stairs.',
+    },
+    elsewhere:
+      'def min_coins(coins, T):\n    INF = float("inf")\n    F = [0] + [INF] * T\n    for x in range(1, T + 1):\n        for c in coins:\n            if c <= x:\n                F[x] = min(F[x], 1 + F[x - c])\n    return F[T] if F[T] < INF else -1',
+    why: {
+      'cc-c1': 'The largest coin can lead to more coins overall. With coins 1, 3 and 4 and a total of 6, greedy gives 4+1+1 but 3+3 needs fewer.',
+      'cc-c2': 'Every amount eventually reduces to 0 when the last coin matches exactly, and that remainder has to cost 0 coins.',
+      'cc-d1': 'It does not work because the best last coin is not known in advance, so the recurrence has to try every coin and take the minimum.',
+      'cc-d2': 'It does not work because every coin has a positive value, so each remainder is strictly smaller and the table can be filled in order.',
+      'cc-d3': 'It does not work because a stored 0 is smaller than any real count, so an impossible amount would win the minimum and report too few coins.',
     },
   },
 }

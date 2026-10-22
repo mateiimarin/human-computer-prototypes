@@ -33,12 +33,12 @@ function skip(_: Confidence | null, later: boolean) {
 
 <template>
   <div>
-    <StageHeader title="The same questions, once more" :description="`Answer the first three again, then judge ${pack.claims.length} claims. Your earlier answers stay hidden until you submit.`" next="Your summary, with your answers next to your baseline." />
+    <StageHeader title="The same questions, once more" :description="`The three baseline questions again, then ${pack.claims.length} true or false statements.`" />
     <QuestionRunner
       :questions="all" :answers="answers" :claim-from="pack.quiz.length" submit-label="Submit and see my summary" skip-label="Skip this check"
-      recap-title="Submit your answers?" recap-note="The first three are compared with your baseline. The claims are reported separately." :confidence="ws.settings.askConfidence"
+      recap-title="Submit your answers?" recap-note="The first three are compared with your baseline."
       @submit="submit" @skip="skipOpen = true" @exit="go('explain')"
     />
-    <SkipDialog v-model:open="skipOpen" title="Skip the post-quiz?" :consequence="`${missing === all.length ? 'All' : 'The unanswered'} items stay unverified, and nothing can be compared with your baseline.`" confirm="Skip and see summary" @confirm="skip" />
+    <SkipDialog v-model:open="skipOpen" title="Skip the final quiz?" :consequence="`${missing === all.length ? 'All' : 'The unanswered'} items will not be shown, and nothing can be compared with your baseline.`" confirm="Skip and see summary" @confirm="skip" />
   </div>
 </template>

@@ -13,10 +13,10 @@ const idx = computed(() => stages.findIndex(s => s.id === props.current))
       <li v-for="(s, i) in stages" :key="s.id" :aria-current="i === idx ? 'step' : undefined">
         <span
           class="flex h-8 items-center gap-1.5 rounded-lg px-3 text-[13px] font-medium transition-colors duration-200"
-          :class="i === idx ? (s.id === 'verify' ? 'bg-check text-check-foreground' : 'bg-foreground text-background') : i < idx ? 'text-foreground' : 'text-muted-foreground'"
+          :class="i === idx ? (s.id === 'check' ? 'bg-check text-check-foreground' : 'bg-foreground text-background') : i < idx ? 'text-foreground' : 'text-muted-foreground'"
         >
           <Check v-if="i < idx && !skipped?.includes(s.id)" class="size-3.5" :stroke-width="3" />
-          <span v-else-if="skipped?.includes(s.id)" class="size-3.5 rounded-full border border-dashed border-current" aria-label="partly unverified" />
+          <span v-else-if="skipped?.includes(s.id)" class="size-3.5 rounded-full border border-dashed border-current" aria-label="partly not shown" />
           {{ s.label }}
         </span>
       </li>

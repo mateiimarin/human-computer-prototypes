@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { EyeOff, LifeBuoy } from '@lucide/vue'
 defineProps<{ assisted?: boolean }>()
-const { confirmRefs, refs } = useLeave()
+const { confirm, sheet } = useReferences()
 </script>
 
 <template>
@@ -12,7 +12,7 @@ const { confirmRefs, refs } = useLeave()
         <template v-if="assisted"><strong class="font-semibold">Assisted.</strong> This check no longer counts as independent evidence.</template>
         <template v-else><strong class="font-semibold">Independent check.</strong> Your chat and solutions are hidden.</template>
       </p>
-      <UiButton variant="ghost" size="sm" class="h-8 shrink-0 text-inherit hover:bg-black/10 dark:hover:bg-white/10" @click="assisted ? (refs = true) : (confirmRefs = true)">
+      <UiButton variant="ghost" size="sm" class="h-8 shrink-0 text-inherit hover:bg-black/10 dark:hover:bg-white/10" @click="assisted ? (sheet = true) : (confirm = true)">
         {{ assisted ? 'Open references' : 'Show references' }}
       </UiButton>
     </div>

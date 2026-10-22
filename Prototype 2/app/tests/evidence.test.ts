@@ -45,14 +45,14 @@ describe('concept headline', () => {
   it('never hides a gap behind green', () => {
     expect(headlineState(['demonstrated', 'demonstrated', 'gap'])).toBe('gap')
     expect(headlineState(['demonstrated', 'unverified'])).toBe('partial')
-    expect(mixedLabel(['demonstrated', 'gap', 'unverified'])).toBe('1 demonstrated · 1 gap · 1 unverified')
+    expect(mixedLabel(['demonstrated', 'gap', 'unverified'])).toBe('1 demonstrated · 1 gap · 1 not shown')
   })
 })
 
 describe('session evidence', () => {
   const pack = packs['max-subarray']!
   const make = () => {
-    const s = blankSession(pack, 'ads')
+    const s = blankSession(pack)
     pack.quiz.forEach(q => (s.post.answers[q.id] = { choice: q.correct, idk: false, confidence: 'high' }))
     pack.claims.forEach(q => (s.post.claims[q.id] = { choice: q.correct, idk: false, confidence: 'high' }))
     s.explain.submitted = true
@@ -68,7 +68,7 @@ describe('session evidence', () => {
     s.assisted.push('explain', 'post')
     expect(buildEntries(pack, s, pack.title).every(e => e.state === 'unverified' && e.condition === 'assisted')).toBe(true)
   })
-  it('keeps a skipped post-quiz unverified', () => {
+  it('keeps a skipped final quiz unverified', () => {
     const s = make()
     s.post.submitted = false
     s.post.skipped = true
@@ -94,20 +94,20 @@ describe('session evidence', () => {
 
 describe('repeated mistakes', () => {
   const gapOn = (sub: string, sessionId: string, at = '2026-10-14T10:00:00Z') => entry({ sub, sessionId, at, state: 'gap' })
-  const links = [{ sub: 'mx-safe', earlier: 'bs-inv', text: 'Both come down to saying why a step is safe.' }]
+  const links = [{ sub: 'dp-substructure', earlier: 'bs-inv', text: 'Both come down to saying why a step is safe.' }]
 
   it('finds an earlier gap on the same point', () => {
-    const hit = repeatedMistake([gapOn('mx-safe', 'old')], 'mx-safe', 'now')
+    const hit = repeatedMistake([gapOn('dp-substructure', 'old')], 'dp-substructure', 'now')
     expect(hit?.related).toBe(false)
   })
   it('follows an authored link to a related point', () => {
-    const hit = repeatedMistake([gapOn('bs-inv', 'old')], 'mx-safe', 'now', links)
+    const hit = repeatedMistake([gapOn('bs-inv', 'old')], 'dp-substructure', 'now', links)
     expect(hit).toMatchObject({ related: true, text: 'Both come down to saying why a step is safe.' })
   })
   it('never counts the current session against the student', () => {
-    expect(repeatedMistake([gapOn('mx-safe', 'now')], 'mx-safe', 'now', links)).toBeNull()
+    expect(repeatedMistake([gapOn('dp-substructure', 'now')], 'dp-substructure', 'now', links)).toBeNull()
   })
   it('ignores earlier evidence that was not a gap', () => {
-    expect(repeatedMistake([entry({ sub: 'mx-safe', sessionId: 'old', state: 'partial' })], 'mx-safe', 'now')).toBeNull()
+    expect(repeatedMistake([entry({ sub: 'dp-substructure', sessionId: 'old', state: 'partial' })], 'dp-substructure', 'now')).toBeNull()
   })
 })

@@ -18,9 +18,8 @@ export interface Question {
   justify?: boolean
 }
 
-export interface SubConcept { id: string; name: string; blurb: string }
-
-export interface Annotation { line: number; kind: 'ok' | 'note' | 'issue'; text: string }
+/** A concept of a topic, such as “Recurrence”. Exercises check a few of them. */
+export interface SubConcept { id: string; name: string }
 
 export interface Feedback {
   covered: string[]
@@ -33,7 +32,6 @@ export interface Pack {
   title: string
   sheetNo: string
   topicId: string
-  conceptId: string
   statement: string
   example: string
   subs: SubConcept[]
@@ -52,9 +50,7 @@ export interface Pack {
   explain: {
     prompt: string
     points: { sub: string; label: string }[]
-    samples: Record<SampleKey, string>
     feedback: Record<SampleKey, Feedback>
-    transcript: string
   }
   work: {
     opening: string
@@ -63,12 +59,8 @@ export interface Pack {
     outline: { text: string; blank?: string; answer?: string }[]
     solution: { steps: string[]; code: string }
     replies: Record<HelpLevel, string[]>
-    attempt: string
     minutes: number
   }
-  sheet: { solution: string; annotations: Annotation[]; summary: string }
-  elsewhere: { solution: string }
-  recall?: { packId: string; prompt: string; reveal: string }
   /** Links a gap here to an earlier gap elsewhere, so a repeated kind of mistake can be pointed out. */
   echoes?: { sub: string; earlier: string; text: string }[]
   twin: {
@@ -78,9 +70,23 @@ export interface Pack {
     code: string
     task: Question[]
     target: string[]
-    sample: Record<SampleKey, string>
   }
+  /** Prepared text for the “Fill sample” chips. Each sample matches the feedback written for it. */
+  sampleAnswers: SampleAnswers
 }
 
-export interface Topic { id: string; name: string; conceptId: string; blurb: string }
-export interface ConceptDef { id: string; name: string; blurb: string }
+export interface SampleAnswers {
+  /** A message in the Work chat. */
+  message: string
+  /** Explain it back. `partial` shows a gap, `complete` shows none, `offtrack` is for facilitators. */
+  explain: Record<SampleKey, string>
+  /** The same three outcomes for the similar problem. */
+  similar: Record<SampleKey, string>
+  /** A solution written outside the app. */
+  elsewhere: string
+  /** One-sentence reasons for the “Why?” box on claims and the “Explain your mistake” box on why-questions, by question id. */
+  why: Record<string, string>
+}
+
+/** A topic of the course, such as “Dynamic programming”. */
+export interface Topic { id: string; name: string; concepts: SubConcept[] }

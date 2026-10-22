@@ -1,23 +1,19 @@
 import type { Pack } from '../types'
+import { concept } from '../catalog'
 
 export const maxSubarray: Pack = {
   id: 'max-subarray',
   title: 'Maximum subarray',
   sheetNo: '4.1',
   topicId: 'dp',
-  conceptId: 'dp',
   statement:
     'Given an integer array $a_0, \\dots, a_{n-1}$, find the largest sum of a **non-empty** contiguous subarray in $O(n)$ time.',
   example: 'For $[-2, 1, -3, 4, -1, 2, 1, -5, 4]$ the answer is $6$, from $[4, -1, 2, 1]$.',
-  subs: [
-    { id: 'mx-state', name: 'State definition', blurb: 'What $D_i$ stands for, and why its endpoint matters.' },
-    { id: 'mx-rec', name: 'Recurrence', blurb: 'Starting fresh versus extending, including all-negative input.' },
-    { id: 'mx-safe', name: 'Why discarding is safe', blurb: 'Why only the best earlier sum needs to be kept.' },
-  ],
-  echoes: [{ sub: 'mx-safe', earlier: 'bs-inv', text: 'Both come down to saying why a step is safe: what stays true after it.' }],
+  subs: [concept('dp-state'), concept('dp-recurrence'), concept('dp-substructure')],
+  echoes: [{ sub: 'dp-substructure', earlier: 'bs-inv', text: 'Both come down to saying why a step is safe: what stays true after it.' }],
   quiz: [
     {
-      id: 'mx-q1', sub: 'mx-state', prompt: 'What does the state $D_i$ represent?',
+      id: 'mx-q1', sub: 'dp-state', prompt: 'In the usual dynamic-programming solution to maximum subarray, a state $D_i$ is kept for each index $i$. What does $D_i$ represent?',
       choices: [
         { id: 'a', label: 'The largest sum of a non-empty subarray ending exactly at index $i$.' },
         { id: 'b', label: 'The largest sum of any subarray somewhere in $a_0 \\dots a_i$.' },
@@ -27,7 +23,7 @@ export const maxSubarray: Pack = {
       why: 'The endpoint matters. $D_i$ must end at $i$ so that it can be extended; a separate variable records the best sum seen anywhere.',
     },
     {
-      id: 'mx-q2', sub: 'mx-rec', prompt: 'How do you compute $D_i$ from the previous state?',
+      id: 'mx-q2', sub: 'dp-recurrence', prompt: 'In that solution, how is $D_i$ computed from the previous state $D_{i-1}$?',
       choices: [
         { id: 'a', label: 'Always extend: $D_i = D_{i-1} + a_i$.' },
         { id: 'b', label: 'Take the better of starting at $a_i$ and extending: $\\max(a_i,\\, D_{i-1} + a_i)$.' },
@@ -37,7 +33,7 @@ export const maxSubarray: Pack = {
       why: 'Every candidate either starts at $i$ or extends one ending at $i-1$. Choosing between the two also handles all-negative arrays.',
     },
     {
-      id: 'mx-q3', sub: 'mx-safe', prompt: 'Why can you discard every other subarray ending at $i-1$?',
+      id: 'mx-q3', sub: 'dp-substructure', prompt: 'In that solution, why can every other subarray ending at $i-1$ be discarded?',
       choices: [
         { id: 'a', label: 'Because the next value will always make the best subarray positive.' },
         { id: 'b', label: 'Because the shortest subarray is always the best one to extend.' },
@@ -49,7 +45,7 @@ export const maxSubarray: Pack = {
   ],
   claims: [
     {
-      id: 'mx-c1', sub: 'mx-rec', justify: true,
+      id: 'mx-c1', sub: 'dp-recurrence', justify: true,
       prompt: '“For an array containing only negative values, the answer is always $0$.”',
       choices: [
         { id: 'true', label: 'True. An empty subarray has sum $0$.' },
@@ -59,7 +55,7 @@ export const maxSubarray: Pack = {
       why: 'The problem asks for a non-empty subarray. For negative input the best choice is the single largest element.',
     },
     {
-      id: 'mx-c2', sub: 'mx-state', justify: true,
+      id: 'mx-c2', sub: 'dp-state', justify: true,
       prompt: '“The answer is always $D_{n-1}$, the best sum ending at the last index.”',
       choices: [
         { id: 'true', label: 'True.' },
@@ -71,7 +67,7 @@ export const maxSubarray: Pack = {
   ],
   defend: [
     {
-      id: 'mx-d1', sub: 'mx-state',
+      id: 'mx-d1', sub: 'dp-state',
       prompt: 'Your solution keeps both `ending_here` and `best`. Why is one variable not enough?',
       choices: [
         { id: 'a', label: '`ending_here` must end at the current index to be extendable; `best` may end earlier.' },
@@ -82,7 +78,7 @@ export const maxSubarray: Pack = {
       why: 'The two answer different questions: the best sum ending here, and the best sum anywhere so far.',
     },
     {
-      id: 'mx-d2', sub: 'mx-safe',
+      id: 'mx-d2', sub: 'dp-substructure',
       prompt: 'If the best sum ending at $i-1$ is negative, what does the recurrence do?',
       choices: [
         { id: 'a', label: 'It extends anyway, because subarrays must be contiguous.' },
@@ -93,7 +89,7 @@ export const maxSubarray: Pack = {
       why: 'A negative prefix only makes the sum smaller, so starting at $a_i$ wins and the max picks it.',
     },
     {
-      id: 'mx-d3', sub: 'mx-rec',
+      id: 'mx-d3', sub: 'dp-recurrence',
       prompt: 'What is the running time, and why?',
       choices: [
         { id: 'a', label: '$O(n^2)$, since every subarray is considered.' },
@@ -122,23 +118,15 @@ export const maxSubarray: Pack = {
     correctWhy: 'a',
     explanation:
       'The intended choice is between $a_i$ and $D_{i-1} + a_i$. Writing $\\max(a_i, D_{i-1}) + a_i$ always adds $a_i$ once more, so starting fresh gives $2a_i$ instead of $a_i$.',
-    sub: 'mx-rec',
+    sub: 'dp-recurrence',
   },
   explain: {
     prompt: 'Explain the approach, the key steps, and why they hold.',
     points: [
-      { sub: 'mx-state', label: 'Defines a state as the best sum ending at index $i$' },
-      { sub: 'mx-rec', label: 'Chooses between starting at $a_i$ and extending the previous state' },
-      { sub: 'mx-safe', label: 'Explains why only the largest earlier sum needs to be kept' },
+      { sub: 'dp-state', label: 'Defines a state as the best sum ending at index $i$' },
+      { sub: 'dp-recurrence', label: 'Chooses between starting at $a_i$ and extending the previous state' },
+      { sub: 'dp-substructure', label: 'Explains why only the largest earlier sum needs to be kept' },
     ],
-    samples: {
-      complete:
-        'For every index I keep the best sum of a subarray that ends there. It either starts again at the current value or extends the best one ending just before. Only the largest earlier sum matters, because adding the same value to two sums keeps their order, so a smaller one can never overtake it. The answer is the maximum over all positions.',
-      partial:
-        'I keep the best sum ending at each index. At every index I either start again at the current value or extend the previous best, and then I take the maximum over all indices.',
-      offtrack:
-        'I would check every subarray and keep the biggest sum, using prefix sums to make each sum quick to compute.',
-    },
     feedback: {
       complete: {
         covered: [
@@ -152,7 +140,7 @@ export const maxSubarray: Pack = {
       partial: {
         covered: ['State defined as the best sum ending at $i$', 'Choice between starting fresh and extending'],
         gap: {
-          sub: 'mx-safe',
+          sub: 'dp-substructure',
           text: 'You describe the choice but not why the other earlier subarrays can be dropped. Add one sentence on why a smaller sum cannot overtake the largest.',
         },
         next: 'Add the missing reason in one sentence, or continue and see it in the summary.',
@@ -160,14 +148,12 @@ export const maxSubarray: Pack = {
       offtrack: {
         covered: [],
         gap: {
-          sub: 'mx-state',
+          sub: 'dp-state',
           text: 'The explanation compares all subarrays. It does not define a state that can be extended, so it does not reach linear time.',
         },
         next: 'Rewrite it around a state that ends at index $i$, then continue.',
       },
     },
-    transcript:
-      'So for each index I keep the best sum ending there. Then I either start again at the current value or extend the previous best, and I take the maximum over all indices at the end.',
   },
   work: {
     minutes: 12,
@@ -214,22 +200,6 @@ export const maxSubarray: Pack = {
         'Here is the full solution. Read it, close it, and re-derive each line. The check afterwards will not show it.',
       ],
     },
-    attempt:
-      'def max_subarray(nums):\n    best = 0\n    current = 0\n    for x in nums:\n        current = max(0, current + x)\n        best = max(best, current)\n    return best',
-  },
-  sheet: {
-    summary: 'Orientation only. This feedback does not count as a demonstration of understanding.',
-    solution:
-      'def max_subarray(nums):\n    best = 0\n    current = 0\n    for x in nums:\n        current = max(0, current + x)\n        best = max(best, current)\n    return best',
-    annotations: [
-      { line: 2, kind: 'issue', text: 'Starting `best` at $0$ returns $0$ for an all-negative array. The subarray must be non-empty.' },
-      { line: 5, kind: 'note', text: 'Resetting to $0$ drops the option “start at $x$” when $x$ is negative but $current$ is worse.' },
-      { line: 6, kind: 'ok', text: 'Keeping `best` separate from `current` is the right structure.' },
-    ],
-  },
-  elsewhere: {
-    solution:
-      'def max_subarray(nums):\n    ending_here = best = nums[0]\n    for x in nums[1:]:\n        ending_here = max(x, ending_here + x)\n        best = max(best, ending_here)\n    return best',
   },
   twin: {
     title: 'Longest increasing run',
@@ -240,14 +210,14 @@ export const maxSubarray: Pack = {
     code: 'def longest_run(a: list[int]) -> int:\n    ending_here = best = 1\n    for i in range(1, len(a)):\n        ending_here = ending_here + 1 if a[i] > a[i - 1] else 1\n        best = max(best, ending_here)\n    return best',
     task: [
       {
-        id: 'mx-t1', sub: 'mx-state',
+        id: 'mx-t1', sub: 'dp-state',
         prompt: 'For $[1, 3, 2, 4, 5, 6]$, what is the answer?',
         choices: [{ id: 'a', label: '$3$' }, { id: 'b', label: '$4$' }, { id: 'c', label: '$6$' }],
         correct: 'b',
         why: 'The run $2, 4, 5, 6$ has length $4$. $L_5 = 4$, and the answer is the maximum over all $L_i$.',
       },
       {
-        id: 'mx-t2', sub: 'mx-safe',
+        id: 'mx-t2', sub: 'dp-substructure',
         prompt: 'Why is returning $L_{n-1}$ alone not enough?',
         choices: [
           { id: 'a', label: 'The longest run can end at any index, so the answer is the maximum over all $L_i$.' },
@@ -258,12 +228,33 @@ export const maxSubarray: Pack = {
         why: 'Like $D_i$, the state ends at $i$. A separate variable must track the best over every end index.',
       },
     ],
-    target: ['mx-state', 'mx-safe'],
-    sample: {
+    target: ['dp-state', 'dp-substructure'],
+  },
+  /** Prepared text for the “Fill sample” chips. Each sample matches the feedback written for it. */
+  sampleAnswers: {
+    message: 'I keep the best sum ending at each index, but I am not sure when to start a new subarray.',
+    explain: {
+      complete:
+        'For every index I keep the best sum of a subarray that ends there. It either starts again at the current value or extends the best one ending just before. Only the largest earlier sum matters, because adding the same value to two sums keeps their order, so a smaller one can never overtake it. The answer is the maximum over all positions.',
+      partial:
+        'I keep the best sum ending at each index. At every index I either start again at the current value or extend the previous best, and then I take the maximum over all indices.',
+      offtrack:
+        'I would check every subarray and keep the biggest sum, using prefix sums to make each sum quick to compute.',
+    },
+    similar: {
       complete:
         'It is the same shape. The state is the length of the run ending at $i$. At each index I either extend the previous run or restart at 1, and I keep a separate best because the longest run can end anywhere.',
       partial: 'It is similar to maximum subarray: I keep the length of the run ending at each index and extend it if the next value is bigger.',
       offtrack: 'I would compare every pair of positions and count how many increase in a row.',
+    },
+    elsewhere:
+      'def max_subarray(nums):\n    ending_here = best = nums[0]\n    for x in nums[1:]:\n        ending_here = max(x, ending_here + x)\n        best = max(best, ending_here)\n    return best',
+    why: {
+      'mx-c1': 'The subarray has to be non-empty, so with only negative values the best choice is the single largest element, not 0.',
+      'mx-c2': 'The best subarray can end at any index, so the best sum ending at the last index is not enough. The answer is the maximum over all of them.',
+      'mx-d1': 'It does not work because the two variables answer different questions: the best sum ending here, which can be extended, and the best sum anywhere so far.',
+      'mx-d2': 'It does not work because a negative earlier sum only makes the new sum smaller, so starting again at the current value wins.',
+      'mx-d3': 'It does not work because each index does a constant amount of work in a single pass, so the total is linear.',
     },
   },
 }

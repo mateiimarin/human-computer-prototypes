@@ -3,23 +3,23 @@ import { LifeBuoy } from '@lucide/vue'
 import { packOf } from '~/lib/session'
 import type { CheckId } from '~/data/session'
 
-const { confirmRefs, refs } = useLeave()
+const { confirm, sheet } = useReferences()
 const { ws } = useWorkspace()
 const { markAssisted } = useSession()
 const s = computed(() => ws.value.active)
 const pack = computed(() => (s.value ? packOf(s.value) : null))
-const checkFor: Record<string, CheckId> = { explain: 'explain', deeper: 'explain', defend: 'defend', mistakes: 'mistakes', 'post-quiz': 'post' }
+const checkFor: Record<string, CheckId> = { explain: 'explain', defend: 'defend', mistakes: 'mistakes', 'post-quiz': 'post' }
 
 function reveal() {
   const c = checkFor[s.value?.step ?? '']
   if (c) markAssisted(c)
-  confirmRefs.value = false
-  refs.value = true
+  confirm.value = false
+  sheet.value = true
 }
 </script>
 
 <template>
-  <UiAlertDialog v-model:open="confirmRefs">
+  <UiAlertDialog v-model:open="confirm">
     <UiAlertDialogContent class="max-w-md">
       <UiAlertDialogHeader>
         <div class="bg-assist text-assist-foreground mb-2 grid size-11 place-items-center rounded-xl"><LifeBuoy class="size-5" /></div>
@@ -33,7 +33,7 @@ function reveal() {
     </UiAlertDialogContent>
   </UiAlertDialog>
 
-  <UiSheet v-model:open="refs">
+  <UiSheet v-model:open="sheet">
     <UiSheetContent side="right" class="w-full gap-0 sm:max-w-lg">
       <UiSheetHeader class="space-y-1.5 p-6 pb-4">
         <UiBadge variant="assist" class="w-fit"><LifeBuoy /> Assisted</UiBadge>

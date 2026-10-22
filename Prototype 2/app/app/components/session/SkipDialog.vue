@@ -15,7 +15,7 @@ watch(open, (o) => { if (o) confidence.value = null })
         <UiAlertDialogTitle>{{ title }}</UiAlertDialogTitle>
         <UiAlertDialogDescription class="space-y-2 leading-6">
           <span class="block">{{ consequence }}</span>
-          <span class="block">Choose “Do this later” if you plan to come back to it. Either way you can return from the summary or Review.</span>
+          <span class="block">“Do this later” keeps it on your list in the summary.</span>
         </UiAlertDialogDescription>
       </UiAlertDialogHeader>
       <ConfidencePicker v-model="confidence" label="How confident are you in this material?" />
