@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { ArrowLeft, ArrowRight, Check, CornerDownRight, Flag, Loader2, PencilLine } from "@lucide/vue";
-import { explainIssue, hasOpenGap, isStale, latestReview } from "~/domain/session";
+import type { Confidence } from "~/data/types";
+import { explainIssue, hasOpenGap, isStale, latestReview, markRevised } from "~/domain/session";
+
+const confidenceOptions: { value: Confidence; label: string }[] = [
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+];
 
 definePageMeta({ layout: "session" });
 const app = useApp();
@@ -39,13 +46,16 @@ onMounted(async () => {
 
 function editExplanation() {
   s.value.explainDraft = r.value.explanation;
+  s.value.explainConfidenceDraft = r.value.confidence;
   r.value.explained = false;
   nextTick(() => document.getElementById("explanation")?.focus());
 }
 /** The explanation comes first: saving it is what opens the way back into the attempt. */
 async function revise() {
-  if (!r.value.explained && !explainIssue(s.value, s.value.explainDraft)) return;
+  if (!r.value.explained && !explainIssue(s.value, s.value.explainDraft, s.value.explainConfidenceDraft)) return;
   s.value.explainDraft = "";
+  s.value.explainConfidenceDraft = null;
+  markRevised(s.value, gapStep.value);
   s.value.focusStep = gapStep.value;
   s.value.phase = "work";
   await navigateTo(`/task/${id.value}/work`);
@@ -142,6 +152,7 @@ async function toReflection() {
                   <template v-if="r.explained">
                     <p class="flex items-center gap-2 text-sm font-bold"><Check class="size-4" :stroke-width="3" /> Your explanation</p>
                     <p class="text-[16px] leading-relaxed">{{ r.explanation }}</p>
+                    <p v-if="r.confidence" class="text-sm font-semibold opacity-85">How sure: {{ confidenceOptions.find((c) => c.value === r.confidence)?.label }}</p>
                     <button class="text-sm font-bold underline underline-offset-4" @click="editExplanation">Edit</button>
                   </template>
                   <template v-else>
@@ -149,6 +160,23 @@ async function toReflection() {
                     <SampleInput label="explanation" class="pt-1" @fill="s.explainDraft = content.sampleAnswers.explanation">
                       <UiTextarea id="explanation" v-model="s.explainDraft" class="bg-card text-foreground min-h-[110px] text-[16px]" placeholder="Write it in your own words. It isn't marked." aria-describedby="explain-help" />
                     </SampleInput>
+                    <div class="flex items-center gap-2.5 pt-1">
+                      <span class="text-sm font-semibold">How sure are you?</span>
+                      <div class="flex gap-1.5" role="radiogroup" aria-label="How sure are you about this explanation">
+                        <button
+                          v-for="c in confidenceOptions"
+                          :key="c.value"
+                          type="button"
+                          role="radio"
+                          :aria-checked="s.explainConfidenceDraft === c.value"
+                          class="rounded-full border-2 px-3 py-1 text-sm font-semibold transition-colors"
+                          :class="s.explainConfidenceDraft === c.value ? 'border-warning-foreground bg-warning-foreground text-warning' : 'border-warning-foreground/30 hover:border-warning-foreground/60'"
+                          @click="s.explainConfidenceDraft = s.explainConfidenceDraft === c.value ? null : c.value"
+                        >
+                          {{ c.label }}
+                        </button>
+                      </div>
+                    </div>
                   </template>
                   <p id="explain-help" class="text-sm opacity-85">Explain the problem first. Then fix the step yourself; the tutor won't write the fix.</p>
                 </div>
@@ -163,7 +191,12 @@ async function toReflection() {
         <div class="bg-background/85 sticky bottom-0 z-20 -mx-5 mt-6 border-t px-5 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6">
           <div class="flex items-center justify-between gap-3">
             <UiButton variant="outline" size="lg" class="max-sm:h-11 max-sm:px-4 max-sm:has-[>svg]:px-4" @click="navigateTo(`/task/${id}/work`)"><ArrowLeft /> Back<span class="max-sm:sr-only">&nbsp;to my attempt</span></UiButton>
-            <UiButton v-if="open" size="lg" class="max-sm:h-11 max-sm:px-4 max-sm:has-[>svg]:px-4" :disabled="!canRevise" @click="revise">Revise step {{ gapStep + 1 }} <ArrowRight /></UiButton>
+            <div v-if="open" class="flex items-center gap-3">
+              <p v-if="!canRevise" class="text-muted-foreground hidden text-sm sm:block">Write an explanation above first.</p>
+              <!-- One-click skip to reflection, promoted from the text link in the gap card so it isn't buried (peer testing: forced through every step) -->
+              <UiButton variant="ghost" size="lg" class="max-sm:h-11 max-sm:px-3" @click="finishOpen = true">Finish with gaps</UiButton>
+              <UiButton size="lg" class="max-sm:h-11 max-sm:px-4 max-sm:has-[>svg]:px-4" :disabled="!canRevise" @click="revise">Revise step {{ gapStep + 1 }} <ArrowRight /></UiButton>
+            </div>
             <UiButton v-else size="lg" class="max-sm:h-11 max-sm:px-4 max-sm:has-[>svg]:px-4" @click="toReflection">Continue to reflection <ArrowRight /></UiButton>
           </div>
         </div>

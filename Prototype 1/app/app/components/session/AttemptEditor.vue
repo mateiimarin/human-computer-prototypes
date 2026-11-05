@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Flag, Sparkles } from "@lucide/vue";
+import { ChevronDown, Flag, NotebookPen, Sparkles } from "@lucide/vue";
 import type { TaskContent } from "~/data/types";
 import { hasOpenGap, isStale, latestReview, nextOutcome } from "~/domain/session";
 
@@ -52,9 +52,16 @@ const hasMath = (b: string | undefined) => !!b && /\$[^$\n]+\$/.test(b);
 
 <template>
   <section aria-labelledby="attempt-title">
-    <header class="space-y-1">
-      <p class="text-muted-foreground text-sm font-semibold">Attempt {{ attempt }}</p>
-      <h1 id="attempt-title" class="font-display text-[2rem] leading-tight font-bold sm:text-4xl">Your attempt</h1>
+    <header class="flex flex-wrap items-start justify-between gap-3">
+      <div class="space-y-1">
+        <p class="text-muted-foreground text-sm font-semibold">Attempt {{ attempt }}</p>
+        <h1 id="attempt-title" class="font-display text-[2rem] leading-tight font-bold sm:text-4xl">Your attempt</h1>
+      </div>
+      <!-- Independent of the set-up choice, so a scaffold that turns out unhelpful can be turned off mid-attempt (peer testing) -->
+      <label class="text-muted-foreground mt-1.5 flex items-center gap-2 text-sm font-semibold">
+        <UiSwitch v-model="s.scaffoldVisible" aria-label="Show step hints" />
+        Step hints
+      </label>
     </header>
 
     <p
@@ -83,7 +90,7 @@ const hasMath = (b: string | undefined) => !!b && /\$[^$\n]+\$/.test(b);
         <div class="min-w-0 pb-9">
           <UiLabel :for="`attempt-${i}`" class="font-display flex min-h-9 items-center text-xl font-bold">{{ step.label }}</UiLabel>
 
-          <p v-if="s.start === 'scaffold'" class="text-guidance-foreground mt-1 mb-3 flex items-start gap-2 text-[15px] font-medium"><Sparkles class="mt-0.5 size-4 shrink-0" /> {{ step.scaffold }}</p>
+          <p v-if="s.scaffoldVisible" class="text-guidance-foreground mt-1 mb-3 flex items-start gap-2 text-[15px] font-medium"><Sparkles class="mt-0.5 size-4 shrink-0" /> {{ step.scaffold }}</p>
 
           <!-- What the last review said about this step, kept next to the text being revised -->
           <div v-if="open && i === gapStep" class="border-warning-foreground/50 bg-warning/60 mt-1 mb-3 space-y-1.5 rounded-r-2xl border-l-4 py-3 pr-4 pl-4 text-[15px] leading-snug">
@@ -105,5 +112,16 @@ const hasMath = (b: string | undefined) => !!b && /\$[^$\n]+\$/.test(b);
         </div>
       </li>
     </ol>
+
+    <!-- Free scratch space: not reviewed, not part of the attempt steps or the reflection -->
+    <UiCollapsible class="border-foreground/10 mt-2 rounded-2xl border">
+      <UiCollapsibleTrigger class="group flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left">
+        <span class="flex items-center gap-2 text-sm font-semibold"><NotebookPen class="size-4" /> Notes <span class="text-muted-foreground font-normal">(not reviewed)</span></span>
+        <ChevronDown class="text-muted-foreground size-4 transition-transform group-data-[state=open]:rotate-180" />
+      </UiCollapsibleTrigger>
+      <UiCollapsibleContent class="px-5 pb-5">
+        <UiTextarea v-model="s.notes" class="bg-card min-h-[90px] text-[15px]" placeholder="Jot anything down for yourself. It isn't part of your attempt or review." aria-label="Notes, not reviewed" />
+      </UiCollapsibleContent>
+    </UiCollapsible>
   </section>
 </template>
