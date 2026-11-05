@@ -1,8 +1,11 @@
 export type Scenario = "issue" | "repeat" | "clear";
 export type StartApproach = "blank" | "scaffold";
-export type Origin = "you" | "prompted" | "supplied" | "setting";
+export type Origin = "you" | "revised" | "prompted" | "supplied" | "setting";
 export type Blocks = [string, string, string];
 export type Phase = "setup" | "work" | "review" | "reflect" | "done";
+export type Confidence = "low" | "medium" | "high";
+/** A step's concept, tracked across the exercise: whether it was shown without help. */
+export type ConceptStatus = "not-attempted" | "assisted" | "demonstrated";
 
 export interface Task {
   id: string;
@@ -75,6 +78,8 @@ export interface Review {
   explanation: string;
   explained: boolean;
   at: string;
+  /** How sure the student was about the explanation, if they said. */
+  confidence: Confidence | null;
 }
 
 export interface Session {
@@ -100,11 +105,25 @@ export interface Session {
   focusStep: number | null;
   /** Open the tutor panel on arrival in the workspace (set by "Show in tutor"). */
   openTutor?: boolean;
+  /** Which tutor-rail tab to show on arrival, alongside openTutor. */
+  openTutorTab?: "tutor" | "sources";
   /** What is typed in the tutor chat, kept while the panel changes. */
   tutorDraft: string;
   explainDraft: string;
+  /** Confidence draft for the explanation being written, kept while the field changes. */
+  explainConfidenceDraft: Confidence | null;
   seenReview: number;
   finishedAt: string | null;
+  /** Step indices fixed after reading the review's feedback: labelled "revised", not "you wrote". */
+  revisedWithFeedback: number[];
+  /** Whether the step is shown with its scaffold prompt, independent of the set-up start choice. */
+  scaffoldVisible: boolean;
+  /** Free-text scratch space, not reviewed or reflected on. */
+  notes: string;
+  /** The optional post-reflection "explain it back" check: completing it clears "assisted" status. */
+  explainedBack: boolean;
+  explainBackDraft: string;
+  explainBackSubmittedAt: string | null;
 }
 
 export interface Contribution {
