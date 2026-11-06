@@ -4,20 +4,15 @@ import {
   advanceGate,
   answerQuestion,
   askForHint,
-  canRequestHint,
   hasPendingQuestion,
   applyPolicy,
-  conceptStatus,
   contributionEntries,
   createSession,
   displayOrigin,
-  explainBackFeedback,
   explainIssue,
   hasOpenGap,
   isStale,
   loadSample,
-  markExplainedBack,
-  markRevised,
   nextOutcome,
   nextStepToTry,
   remainingHints,
@@ -29,17 +24,8 @@ import {
 const content = contents.t1!;
 
 describe("hints in the chat", () => {
-  it("refuses a hint before anything is written, and explains why", () => {
-    const s = createSession("t1");
-    expect(canRequestHint(s)).toBe(false);
-    askForHint(s, content);
-    expect(s.revealedHints).toEqual([]);
-    expect(s.chat.at(-1)!.text).toMatch(/Write a first step/);
-  });
-
   it("gives a hint, asks for a plan, then a recall answer, then unlocks the next hint", () => {
     const s = createSession("t1");
-    s.blocks[0] = "For n = 1, T(1) = 1.";
     askForHint(s, content);
     expect(s.revealedHints).toEqual([0]);
     expect(s.chat.map((m) => m.kind)).toEqual(["hint", "question"]);
@@ -221,79 +207,5 @@ describe("attribution corrections", () => {
     expect(displayOrigin(c, { x: "mine" })).toBe("you");
     expect(displayOrigin(c, { x: "mixed" })).toBe("mixed");
     expect(displayOrigin(c, { x: "unsure" })).toBe("unclear");
-  });
-
-  it("labels a step revised after tutor feedback distinctly from one written outright", () => {
-    const s = createSession("t1");
-    s.blocks[0] = "a";
-    s.blocks[1] = "b";
-    markRevised(s, 1);
-    const entries = contributionEntries(s, content);
-    expect(entries.find((e) => e.id === "step-0")!.origin).toBe("you");
-    expect(entries.find((e) => e.id === "step-1")!.origin).toBe("revised");
-  });
-});
-
-describe("blank start renders no scaffold (A5 regression)", () => {
-  it("a blank-start session starts with scaffoldVisible off", () => {
-    const blank = createSession("t1", { budget: 3, start: "blank", starterGuidance: true });
-    expect(blank.scaffoldVisible).toBe(false);
-  });
-  it("a scaffold-start session starts with scaffoldVisible on", () => {
-    const scaffold = createSession("t1", { budget: 3, start: "scaffold", starterGuidance: true });
-    expect(scaffold.scaffoldVisible).toBe(true);
-  });
-});
-
-describe("concepts: demonstrated vs. assisted (B1/B2)", () => {
-  it("is not-attempted while empty, demonstrated once written without help", () => {
-    const s = createSession("t1");
-    expect(conceptStatus(s, content, 0)).toBe("not-attempted");
-    s.blocks[0] = "a";
-    expect(conceptStatus(s, content, 0)).toBe("demonstrated");
-  });
-
-  it("is assisted once a hint was used anywhere in the exercise", () => {
-    const s = createSession("t1");
-    s.blocks[0] = "a";
-    applyPolicy(s, 3);
-    revealHint(s, content);
-    expect(conceptStatus(s, content, 0)).toBe("assisted");
-  });
-
-  it("promotes assisted concepts to demonstrated after Explain it back, except an unresolved gap", () => {
-    const s = createSession("t1");
-    s.scenario = "issue";
-    loadSample(s, content);
-    applyPolicy(s, 3);
-    revealHint(s, content);
-    submitReview(s); // outcome "issue": leaves content.gap.step open
-    expect(conceptStatus(s, content, content.gap.step)).toBe("assisted");
-    markExplainedBack(s);
-    expect(conceptStatus(s, content, content.gap.step)).toBe("assisted"); // still open, so still assisted
-    const other = content.gap.step === 0 ? 1 : 0;
-    expect(conceptStatus(s, content, other)).toBe("demonstrated");
-  });
-});
-
-describe("explain it back feedback (B4)", () => {
-  it("reuses the review's own support lines and gap, inventing nothing new", () => {
-    const s = createSession("t1");
-    loadSample(s, content);
-    submitReview(s); // "issue" scenario by default
-    const fb = explainBackFeedback(s, content);
-    expect(fb.gap).toEqual(content.gap);
-    expect(fb.covered).toHaveLength(2);
-    expect(fb.covered).not.toContain(content.supported[content.gap.step]);
-  });
-
-  it("has no gap once the review is clear", () => {
-    const clear = createSession("t1");
-    clear.scenario = "clear";
-    loadSample(clear, content);
-    submitReview(clear);
-    const fb = explainBackFeedback(clear, content);
-    expect(fb.gap).toBeNull();
-    expect(fb.covered).toHaveLength(3);
   });
 });

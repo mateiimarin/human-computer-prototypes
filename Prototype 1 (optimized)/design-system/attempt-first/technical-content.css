@@ -1,0 +1,27 @@
+/* Import after the KaTeX stylesheet and tokens.css.
+   Used by the reference board; reuse these rules in the Nuxt renderer wrapper. */
+.math-block {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  padding-block: .5rem;
+}
+.math-block:focus-visible,
+.code-scroll:focus-visible {
+  outline: var(--focus-width) solid var(--ring);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+.katex { font-size: 1.05em; }
+.katex-display { margin-block: .5em; text-align: left; }
+.katex-display > .katex { text-align: left; }
+.code-scroll { min-width: 0; max-width: 100%; overflow-x: auto; }
+.code-scroll pre {
+  margin: 0;
+  padding: 1rem;
+  font: 400 .875rem/1.7 var(--font-code);
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+  white-space: pre;
+  tab-size: 4;
+}
+.code-scroll code { font-family: inherit; }

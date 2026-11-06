@@ -4,7 +4,6 @@ import type { TaskContent } from "~/data/types";
 import {
   answerQuestion,
   askForHint,
-  canRequestHint,
   contributionEntries,
   displayOrigin,
   hasPendingQuestion,
@@ -22,20 +21,13 @@ const props = defineProps<{ content: TaskContent; sheet?: boolean }>();
 const emit = defineEmits<{ focusStep: [step: number] }>();
 
 const s = useSession();
-const { tab } = useTutorPanel();
+const tab = ref("tutor");
 const notice = ref("");
 const thinking = ref(false);
 const scroller = ref<HTMLElement>();
 const entries = computed(() => contributionEntries(s.value, props.content));
 const pending = computed(() => hasPendingQuestion(s.value));
-const hintsOff = computed(() => s.value.budget === 0 || remainingHints(s.value) === 0);
-const noHints = computed(() => !canRequestHint(s.value));
-const hintLabel = computed(() => {
-  if (s.value.budget === 0) return "No hints";
-  if (remainingHints(s.value) === 0) return "No hints left";
-  if (!hasWork(s.value)) return "Hint · write a step first";
-  return `Hint · ${remainingHints(s.value)} left`;
-});
+const noHints = computed(() => s.value.budget === 0 || remainingHints(s.value) === 0);
 
 const request = computed({
   get: () => s.value.tutorDraft,
@@ -88,8 +80,7 @@ function fillSample() {
   }
   nextTick(() => document.getElementById("tutor-input")?.focus());
 }
-const dot = (o: string) =>
-  o === "you" ? "bg-forest" : o === "revised" ? "bg-sun-deep" : o === "prompted" ? "bg-iris" : o === "supplied" ? "bg-coral" : o === "mixed" ? "bg-sun-deep" : "bg-muted-foreground";
+const dot = (o: string) => (o === "you" ? "bg-forest" : o === "prompted" ? "bg-iris" : o === "supplied" ? "bg-coral" : o === "mixed" ? "bg-sun-deep" : "bg-muted-foreground");
 const tabClass =
   "text-muted-foreground data-[state=active]:text-foreground h-auto flex-none rounded-none border-b-2 border-transparent px-0 pb-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none";
 </script>
@@ -156,24 +147,20 @@ const tabClass =
                 @keydown.enter.exact.prevent="send(request)"
               />
               <UiInputGroupAddon align="block-end" class="justify-between">
-                <span class="flex items-center gap-1.5">
-                  <!-- Hint is its own button, not folded into "Ask about…", so it's the one place that gives a hint -->
-                  <UiInputGroupButton variant="outline" size="sm" class="rounded-full" :disabled="noHints" :title="hintLabel" @click="send('Give me a hint', { menu: true })">
-                    <Lightbulb /> {{ hintLabel }}
-                  </UiInputGroupButton>
-                  <UiDropdownMenu>
-                    <UiDropdownMenuTrigger as-child>
-                      <UiInputGroupButton variant="ghost" size="icon-sm" class="rounded-full" aria-label="Ask about…"><ListPlus /></UiInputGroupButton>
-                    </UiDropdownMenuTrigger>
-                    <UiDropdownMenuContent align="start" side="top" class="w-72 rounded-2xl p-1.5">
-                      <UiDropdownMenuItem v-if="!hasWork(s)" class="rounded-xl py-2.5" @select="send('I don\'t know where to start.', { menu: true })"><Compass /> I don't know where to start</UiDropdownMenuItem>
-                      <UiDropdownMenuLabel class="text-muted-foreground text-xs font-semibold">I'm stuck on…</UiDropdownMenuLabel>
-                      <UiDropdownMenuItem v-for="(st, n) in content.steps" :key="st.label" class="rounded-xl py-2.5" @select="send(`I'm stuck on step ${n + 1}.`, { about: n, menu: true })">
-                        <Target /> Step {{ n + 1 }}: {{ st.label }}
-                      </UiDropdownMenuItem>
-                    </UiDropdownMenuContent>
-                  </UiDropdownMenu>
-                </span>
+                <UiDropdownMenu>
+                  <UiDropdownMenuTrigger as-child>
+                    <UiInputGroupButton variant="outline" size="sm" class="rounded-full"><ListPlus /> Quick ask</UiInputGroupButton>
+                  </UiDropdownMenuTrigger>
+                  <UiDropdownMenuContent align="start" side="top" class="w-72 rounded-2xl p-1.5">
+                    <UiDropdownMenuItem class="rounded-xl py-2.5" :disabled="noHints" @select="send('Give me a hint', { menu: true })"><Lightbulb /> Give me a hint</UiDropdownMenuItem>
+                    <UiDropdownMenuItem v-if="!hasWork(s)" class="rounded-xl py-2.5" @select="send('I don\'t know where to start.', { menu: true })"><Compass /> I don't know where to start</UiDropdownMenuItem>
+                    <UiDropdownMenuSeparator />
+                    <UiDropdownMenuLabel class="text-muted-foreground text-xs font-semibold">I'm stuck on…</UiDropdownMenuLabel>
+                    <UiDropdownMenuItem v-for="(st, n) in content.steps" :key="st.label" class="rounded-xl py-2.5" @select="send(`I'm stuck on step ${n + 1}.`, { about: n, menu: true })">
+                      <Target /> Step {{ n + 1 }}: {{ st.label }}
+                    </UiDropdownMenuItem>
+                  </UiDropdownMenuContent>
+                </UiDropdownMenu>
                 <UiInputGroupButton type="submit" variant="default" size="icon-sm" class="rounded-full" aria-label="Send to tutor" :disabled="thinking"><Send /></UiInputGroupButton>
               </UiInputGroupAddon>
             </UiInputGroup>

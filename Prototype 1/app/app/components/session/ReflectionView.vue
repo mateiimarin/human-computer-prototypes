@@ -17,17 +17,14 @@ const origin = (c: Contribution) => displayOrigin(c, props.flags);
 const count = (o: DisplayOrigin) => props.contributions.filter((c) => origin(c) === o).length;
 const stats = computed(() =>
   [
-    // "Revised" entries are still the student's own writing, so they count in the same tile; their
-    // per-entry tag below still discloses that tutor feedback was involved (fixes the "You wrote"
-    // over-credit the heuristic evaluation flagged).
-    { key: "you", label: originLabels.you, hint: "Steps, answers and explanations", value: count("you") + count("revised"), dot: "bg-forest" },
+    { key: "you", label: originLabels.you, hint: "Steps, answers and explanations", value: count("you"), dot: "bg-forest" },
     { key: "prompted", label: originLabels.prompted, hint: "Questions the tutor asked you", value: count("prompted"), dot: "bg-iris" },
     { key: "supplied", label: originLabels.supplied, hint: "Hints you unlocked", value: count("supplied"), dot: "bg-coral" },
     { key: "mixed", label: "Mixed or not sure", hint: "Entries you relabelled", value: count("mixed") + count("unclear"), dot: "bg-sun-deep" },
   ].filter((x) => x.key !== "mixed" || x.value > 0),
 );
 const dotClass = (o: DisplayOrigin) =>
-  o === "you" ? "bg-forest" : o === "revised" ? "bg-sun-deep" : o === "prompted" ? "bg-iris" : o === "supplied" ? "bg-coral" : o === "mixed" ? "bg-sun-deep" : "bg-muted-foreground";
+  o === "you" ? "bg-forest" : o === "prompted" ? "bg-iris" : o === "supplied" ? "bg-coral" : o === "mixed" ? "bg-sun-deep" : "bg-muted-foreground";
 const choiceLabel = (v: string | undefined) => relabelChoices.find((c) => c.value === v)?.label ?? "Not sure";
 </script>
 

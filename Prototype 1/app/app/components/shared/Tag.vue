@@ -1,9 +1,8 @@
 <script setup lang="ts">
-type Kind = "you" | "revised" | "prompted" | "supplied" | "setting" | "mixed" | "unclear" | "gap" | "ok" | "neutral" | "sun" | "ink";
+type Kind = "you" | "prompted" | "supplied" | "setting" | "mixed" | "unclear" | "gap" | "ok" | "neutral" | "sun" | "ink";
 withDefaults(defineProps<{ kind?: Kind }>(), { kind: "neutral" });
 const styles: Record<Kind, string> = {
   you: "bg-student text-student-foreground",
-  revised: "bg-mixed text-mixed-foreground",
   prompted: "bg-guidance text-guidance-foreground",
   supplied: "bg-ai-supplied text-ai-supplied-foreground",
   setting: "bg-unclear text-unclear-foreground",

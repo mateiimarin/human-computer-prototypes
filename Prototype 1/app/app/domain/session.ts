@@ -1,11 +1,8 @@
 import type {
   Blocks,
   ChatMessage,
-  Confidence,
-  ConceptStatus,
   Contribution,
   Defaults,
-  Origin,
   Review,
   Scenario,
   Session,
@@ -14,7 +11,6 @@ import type {
 
 export const originLabels = {
   you: "You wrote",
-  revised: "You revised, with tutor feedback",
   prompted: "Tutor asked",
   supplied: "Tutor gave a hint",
   setting: "Your change",
@@ -72,28 +68,15 @@ export function createSession(taskId: string, defaults?: Defaults): Session {
     flags: {},
     focusStep: null,
     openTutor: false,
-    openTutorTab: "tutor",
     tutorDraft: "",
     explainDraft: "",
-    explainConfidenceDraft: null,
     seenReview: 0,
     finishedAt: null,
-    revisedWithFeedback: [],
-    scaffoldVisible: defaults?.start === "scaffold",
-    notes: "",
-    explainedBack: false,
-    explainBackDraft: "",
-    explainBackSubmittedAt: null,
   };
 }
 
 export function hasWork(s: Session) {
   return s.blocks.some((b) => b.trim());
-}
-
-/** A hint needs a first written step: "attempt first" is enforced by the gate, not just a preference. */
-export function canRequestHint(s: Session) {
-  return s.budget > 0 && remainingHints(s) > 0 && hasWork(s);
 }
 
 export function remainingHints(s: Session) {
@@ -152,8 +135,6 @@ export function askForHint(s: Session, content: TaskContent) {
     return tutorSay(s, { kind: "text", text: "Hints are off for this exercise. Use “Change hints” at the top to turn them on." });
   if (remainingHints(s) === 0)
     return tutorSay(s, { kind: "text", text: "You've used all your hints. Keep working, ask me a question, or change the number of hints at the top." });
-  if (!hasWork(s))
-    return tutorSay(s, { kind: "text", text: "Write a first step before asking for a hint. If you don't know where to start, tell me that instead." });
   if (hasPendingQuestion(s))
     return tutorSay(s, { kind: "question", text: `Answer this first to unlock hint ${s.revealedHints.length + 1}: ${pendingQuestion(s, content)}` });
   if (!revealHint(s, content))
@@ -233,7 +214,6 @@ export function submitReview(s: Session): SubmitResult {
     explanation: "",
     explained: false,
     at: new Date().toISOString(),
-    confidence: null,
   });
   return "ok";
 }
@@ -252,18 +232,12 @@ export function hasOpenGap(s: Session): boolean {
   return !!r && r.outcome !== "clear";
 }
 
-export function explainIssue(s: Session, explanation: string, confidence: Confidence | null = null): boolean {
+export function explainIssue(s: Session, explanation: string): boolean {
   const r = latestReview(s);
   if (!r || !explanation.trim() || r.outcome === "clear") return false;
   r.explanation = explanation.trim();
   r.explained = true;
-  r.confidence = confidence;
   return true;
-}
-
-/** Record that a step was fixed after the student explained why it failed: it reads "revised", not "you wrote". */
-export function markRevised(s: Session, step: number) {
-  if (!s.revisedWithFeedback.includes(step)) s.revisedWithFeedback.push(step);
 }
 
 export function relabel(flags: Record<string, string>, id: string, value: string | null) {
@@ -278,7 +252,7 @@ export function contributionEntries(s: Session, content: TaskContent): Contribut
         ? [
             {
               id: `step-${i}`,
-              origin: (s.revisedWithFeedback.includes(i) ? "revised" : "you") as Origin,
+              origin: "you" as const,
               title: content.steps[i]!.label,
               evidence: b,
               step: i,
@@ -326,38 +300,4 @@ export function contributionEntries(s: Session, content: TaskContent): Contribut
       step: null,
     })),
   ];
-}
-
-/**
- * Each step's concept is "demonstrated" once it's written and either never touched by a hint or
- * tutor exchange, or shown independently afterward in "Explain it back". Otherwise, once written,
- * it's "assisted" — not a lesser grade, just an honest record that help was used (G51).
- */
-export function conceptStatus(s: Session, content: TaskContent, i: number): ConceptStatus {
-  if (!s.blocks[i]?.trim()) return "not-attempted";
-  const touchedByHelp = s.revealedHints.length > 0 || s.exchanges.some((e) => e.step === i);
-  const stillOpenGap = hasOpenGap(s) && i === content.gap.step;
-  if (touchedByHelp && (!s.explainedBack || stillOpenGap)) return "assisted";
-  return "demonstrated";
-}
-
-export function conceptChips(s: Session, content: TaskContent) {
-  return content.steps.map((step, i) => ({ label: step.label, status: conceptStatus(s, content, i) }));
-}
-
-/**
- * Scripted "covered vs. gap" feedback for the optional "Explain it back" check, built from the same
- * fixtures the review screen already uses (G22): the per-step support lines, and the unresolved gap
- * if the exercise was finished with one still open.
- */
-export function explainBackFeedback(s: Session, content: TaskContent) {
-  const openGap = hasOpenGap(s);
-  const covered = content.supported.filter((_, i) => !(openGap && i === content.gap.step));
-  return { covered, gap: openGap ? content.gap : null };
-}
-
-/** Completing the check clears "assisted" status for every concept in this exercise (G52). */
-export function markExplainedBack(s: Session) {
-  s.explainedBack = true;
-  s.explainBackSubmittedAt = new Date().toISOString();
 }

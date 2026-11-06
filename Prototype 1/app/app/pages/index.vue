@@ -1,21 +1,11 @@
 <script setup lang="ts">
 import { ArrowRight, Check } from "@lucide/vue";
 import { phasePath } from "~/lib/journey";
-import { conceptChips } from "~/domain/session";
 
 useHead({ title: "Exercises · Attempt First" });
 const app = useApp();
 
 const label = { new: "Start", inprogress: "Continue", finished: "View reflection" } as const;
-const conceptDot = { "not-attempted": "bg-foreground/15", assisted: "bg-sun-deep", demonstrated: "bg-forest" } as const;
-
-/** Concept chips: only shown once an exercise has been started, so a fresh row stays plain (G36). */
-function chips(id: string) {
-  const s = app.session(id);
-  const content = app.content(id);
-  if (!s || !content || app.status(id) === "new") return [];
-  return conceptChips(s, content);
-}
 
 /** New exercises open on their description; the others go straight to where the student left off. */
 function target(id: string) {
@@ -41,13 +31,6 @@ function target(id: string) {
             <span class="min-w-0 flex-1">
               <span class="font-display block text-xl leading-tight font-bold text-balance sm:text-2xl">{{ t.title }}</span>
               <span class="text-muted-foreground mt-1 block text-[15px]">{{ t.course }} · {{ t.topic }}</span>
-              <!-- Concepts shown without help, not a progress bar: a chip per step, not a cross-exercise destination -->
-              <span v-if="chips(t.id).length" class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span v-for="c in chips(t.id)" :key="c.label" class="text-muted-foreground inline-flex items-center gap-1.5 text-xs font-semibold">
-                  <span class="size-1.5 rounded-full" :class="conceptDot[c.status]" aria-hidden="true" />
-                  {{ c.label }}
-                </span>
-              </span>
             </span>
             <span
               class="inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-transform group-hover:translate-x-0.5"

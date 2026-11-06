@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { useMediaQuery } from "@vueuse/core";
-import { ArrowRight, ChevronDown, MessageCircle } from "@lucide/vue";
+import { ArrowRight, MessageCircle } from "@lucide/vue";
 import { submitReview } from "~/domain/session";
-
-const contextOpen = ref(true);
 
 definePageMeta({ layout: "session" });
 const app = useApp();
@@ -14,7 +12,7 @@ const task = computed(() => app.task(id.value)!);
 useHead({ title: computed(() => `Work · ${task.value.title}`) });
 
 const wide = useMediaQuery("(min-width: 1024px)");
-const { open: helpOpen, tab: helpTab } = useTutorPanel();
+const helpOpen = ref(false);
 const error = ref("");
 const editor = ref<{ focusStep: (i: number) => void }>();
 const sheetOpen = computed({
@@ -32,10 +30,8 @@ onMounted(() => {
   // The tutor is open on arrival when it already has something to show: a starter question,
   // a scaffold start (hints are part of that path) or a "Show in tutor" link from the reflection.
   const hasHistory = s.value.exchanges.length > 0 || s.value.revealedHints.length > 0;
-  if (s.value.openTutor) helpTab.value = s.value.openTutorTab ?? "tutor";
   helpOpen.value = !!s.value.openTutor || ((hasHistory || s.value.start === "scaffold") && wide.value);
   s.value.openTutor = false;
-  s.value.openTutorTab = "tutor";
   if (s.value.focusStep !== null) {
     const i = s.value.focusStep;
     s.value.focusStep = null;
@@ -65,16 +61,9 @@ function review() {
     <!-- One workspace: the exercise and the attempt read as one page, the tutor docks beside it -->
     <div class="min-w-0">
       <div class="mx-auto w-full max-w-[760px] px-5 pt-8 pb-10 sm:px-8">
-        <!-- Sticky so the exercise statement stays visible while scrolling a long attempt (peer testing request) -->
-        <UiCollapsible v-model:open="contextOpen" as="section" aria-label="Exercise" class="bg-card sticky top-[72px] z-10 rounded-[2rem] shadow-md">
-          <UiCollapsibleTrigger class="group flex w-full items-center justify-between gap-3 rounded-t-[2rem] px-6 py-4 text-left sm:px-8" :class="!contextOpen ? 'rounded-b-[2rem]' : ''">
-            <span class="text-muted-foreground text-xs font-bold tracking-wide uppercase">Exercise</span>
-            <ChevronDown class="text-muted-foreground size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
-          </UiCollapsibleTrigger>
-          <UiCollapsibleContent class="px-6 pb-6 sm:px-8 sm:pb-8">
-            <TaskContext :content="content" hide-label />
-          </UiCollapsibleContent>
-        </UiCollapsible>
+        <section aria-label="Exercise" class="bg-card rounded-[2rem] p-6 shadow-md sm:p-8">
+          <TaskContext :content="content" />
+        </section>
         <Reveal :y="22" class="pt-10"><AttemptEditor ref="editor" :content="content" :error="error" /></Reveal>
       </div>
 

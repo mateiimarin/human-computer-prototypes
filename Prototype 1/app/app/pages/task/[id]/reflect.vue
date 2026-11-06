@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ArrowRight, MessageSquareQuote } from "@lucide/vue";
+import { ArrowRight } from "@lucide/vue";
 import { toast } from "vue-sonner";
-import { conceptChips, contributionEntries, hasOpenGap } from "~/domain/session";
+import { contributionEntries, hasOpenGap } from "~/domain/session";
 
 definePageMeta({ layout: "session" });
 const app = useApp();
@@ -13,12 +13,6 @@ useHead({ title: computed(() => `Reflect · ${task.value.title}`) });
 
 const entries = computed(() => contributionEntries(s.value, content.value));
 const gaps = computed(() => (hasOpenGap(s.value) ? [content.value.gap.revisit] : []));
-const concepts = computed(() => conceptChips(s.value, content.value));
-const conceptStyle = {
-  "not-attempted": { dot: "bg-foreground/20", text: "Not attempted" },
-  assisted: { dot: "bg-sun-deep", text: "Shown with help" },
-  demonstrated: { dot: "bg-forest", text: "Shown without help" },
-} as const;
 
 async function showStep(i: number) {
   s.value.focusStep = i;
@@ -59,21 +53,6 @@ async function finish() {
       @show-tutor="showTutor"
       @reopen="reopen"
     />
-
-    <!-- Concepts: reuses each step's own label, so nothing is invented beyond what the exercise already names -->
-    <section aria-labelledby="concepts" class="mt-12 border-t pt-8">
-      <h2 id="concepts" class="font-display mb-1 text-2xl font-bold">Concepts</h2>
-      <p class="text-muted-foreground mb-5 max-w-xl text-[15px] leading-relaxed">Whether each step was shown without help. This doesn't measure what you understand.</p>
-      <ul class="space-y-2.5">
-        <li v-for="c in concepts" :key="c.label" class="flex items-center gap-2.5 text-[15px] font-medium">
-          <span class="size-2.5 rounded-full" :class="conceptStyle[c.status].dot" aria-hidden="true" />
-          <span class="font-semibold">{{ c.label }}</span>
-          <span class="text-muted-foreground">{{ conceptStyle[c.status].text }}</span>
-        </li>
-      </ul>
-      <UiButton v-if="!s.explainedBack" variant="outline" class="mt-6" @click="navigateTo(`/task/${id}/explain`)"><MessageSquareQuote /> Explain it back (optional)</UiButton>
-      <p v-else class="text-forest mt-6 flex items-center gap-2 text-sm font-semibold"><MessageSquareQuote class="size-4" /> You explained this exercise back on {{ new Date(s.explainBackSubmittedAt!).toLocaleDateString() }}.</p>
-    </section>
 
     <footer class="mt-14 flex flex-wrap items-center justify-between gap-3 border-t pt-8">
       <UiButton variant="outline" size="lg" @click="reopen">Reopen exercise</UiButton>
