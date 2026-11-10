@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { EllipsisVertical, Info, RotateCcw, SlidersHorizontal, X } from "@lucide/vue";
+import { EllipsisVertical, Info, RotateCcw, SlidersHorizontal, Users, X } from "@lucide/vue";
 import { toast } from "vue-sonner";
 import { phases } from "~/lib/journey";
-import { hintsLabel, remainingHints } from "~/domain/session";
+import { contributionEntries, hintsLabel, remainingHints } from "~/domain/session";
 
 const app = useApp();
 const route = useRoute();
 const id = useTaskId();
 const task = computed(() => app.task(id.value));
 const s = useSession();
+const content = useTaskContent();
 const assist = useAssistDialog();
+const panel = useTutorPanel();
 const intro = useIntro();
 const restartOpen = ref(false);
 
@@ -27,6 +29,16 @@ const showAgreement = computed(() => s.value?.started && current.value === 1);
 const agreement = computed(() =>
   !s.value ? "" : s.value.budget === 0 ? hintsLabel(0) : `${remainingHints(s.value)} of ${hintsLabel(s.value.budget)} left`,
 );
+// "Who thought it?" gets a persistent header entry point, not only a tab buried in the tutor rail
+// (peer testing: one tester never found it). Visible once there's something to show.
+const showSources = computed(() => s.value?.started && current.value !== 3 && (s.value?.reviews.length || s.value?.blocks.some((b) => b.trim())));
+const sourcesCount = computed(() => (content.value ? contributionEntries(s.value, content.value).length : 0));
+function openSources() {
+  if (!s.value) return;
+  if (s.value.reviews.length) return navigateTo(`/task/${id.value}/reflect`);
+  panel.tab.value = "sources";
+  panel.open.value = true;
+}
 function startOver() {
   app.startOver(id.value);
   restartOpen.value = false;
@@ -74,6 +86,16 @@ function startOver() {
         <div class="ml-auto flex items-center gap-2 md:ml-0">
           <Transition enter-active-class="transition duration-500 ease-out" enter-from-class="translate-y-1 opacity-0">
             <button
+              v-if="showSources"
+              class="bg-card hover:bg-card hidden h-11 items-center gap-2.5 rounded-full px-4 text-sm font-semibold shadow-sm transition-shadow hover:shadow-md lg:flex"
+              :aria-label="`Who thought it? ${sourcesCount} entries.`"
+              @click="openSources"
+            >
+              <Users class="text-iris size-4" /> Who thought it? <span class="text-muted-foreground font-medium">{{ sourcesCount }}</span>
+            </button>
+          </Transition>
+          <Transition enter-active-class="transition duration-500 ease-out" enter-from-class="translate-y-1 opacity-0">
+            <button
               v-if="showAgreement"
               class="bg-card hover:bg-card hidden h-11 items-center gap-2.5 rounded-full px-4 text-sm font-semibold shadow-sm transition-shadow hover:shadow-md lg:flex"
               :aria-label="`Hints: ${agreement}. Change hints.`"
@@ -87,6 +109,7 @@ function startOver() {
               <UiButton variant="secondary" size="icon" class="bg-card shadow-sm" aria-label="Session menu"><EllipsisVertical /></UiButton>
             </UiDropdownMenuTrigger>
             <UiDropdownMenuContent align="end" class="w-56 rounded-2xl p-1.5">
+              <UiDropdownMenuItem v-if="showSources" class="rounded-xl py-2.5 lg:hidden" @select="openSources"><Users /> Who thought it? ({{ sourcesCount }})</UiDropdownMenuItem>
               <UiDropdownMenuItem v-if="showAgreement" class="rounded-xl py-2.5 lg:hidden" @select="assist.open.value = true"><SlidersHorizontal /> Change hints</UiDropdownMenuItem>
               <UiDropdownMenuItem class="rounded-xl py-2.5" @select="intro.open.value = true"><Info /> About this prototype</UiDropdownMenuItem>
               <UiDropdownMenuSeparator />
